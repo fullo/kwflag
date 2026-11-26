@@ -29,3 +29,11 @@ può non riuscire perché non c'è un server TURN; il punteggio non è salvato t
 Il gioco è un solo file HTML senza build. Apri `index.html` con un server statico locale
 (es. `python3 -m http.server`) e proponi le modifiche con una pull request. Prima di cambiare il protocollo di rete
 leggi `SPEC.md`: i campi della presence sono condivisi con la versione dentro Claude.
+
+## Licenza
+KWFlag è software libero, distribuito con la **GNU General Public License versione 2** (`GPL-2.0-only`):
+puoi usarlo, studiarlo, modificarlo e ridistribuirlo, anche modificato, purché con la stessa licenza e con i sorgenti.
+Testo completo in [`LICENSE`](LICENSE).
+
+`trystero.js` è un pacchetto di [Trystero](https://github.com/dmotz/trystero) 0.27.0, © Dan Motzenbecker,
+distribuito con licenza MIT (compatibile con la GPL); l'avviso di licenza è in testa al file.
