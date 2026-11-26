@@ -7,10 +7,11 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 (es. `https://fullo.github.io/kwflag/#arena-ktyfog`).
 
 ## Come si gioca
-- WASD o frecce per guidare, Spazio per sparare, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
+- WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
 - Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti) e **cattura la bandiera** (al meglio di 3/5/11).
 - Squadre Arancio (stella) e Blu (cuore): colori scelti per essere distinguibili anche con daltonismo.
-- Bandierine stile BZFlag, una alla volta: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo e **Salto 3D**, che porta la tua
+- Bandierine stile BZFlag, una alla volta: tiro rapido, rimbalzo, perforante, laser, missile guidato, onda d'urto, scudo,
+  invisibilità, stealth, identifica, turbo e **Salto 3D**, che porta la tua
   vista in 2.5D e ti fa salire sui blocchi gialli (piattaforme) dalle rampe ai due capi. Teletrasporti a vortice.
 - Statistiche personali (partite, vittorie, colpi, bandiere) salvate solo nel tuo browser.
 - Vista dell'arena, scelta a inizio partita e uguale per tutti: **2D dall'alto** oppure **2.5D nella nebbia**, con la

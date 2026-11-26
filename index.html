@@ -130,7 +130,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
 <body>
 <header class="top">
   <h1 class="logo">KW<span>Flag</span></h1>
-  <span class="keys">WASD o frecce · Spazio spara · Q lascia · Maiusc+M mappa · Maiusc+R radar</span>
+  <span class="keys">WASD o frecce · Spazio spara · Tab salta · Q lascia · Maiusc+M mappa · Maiusc+R radar</span>
   <button class="nb" id="arbtn" type="button">Arene</button>
   <button class="nb nb2" id="newmap" type="button">Nuova mappa</button>
   <button class="tg" id="sfxb" type="button" aria-pressed="true">Suoni sì</button>
@@ -155,7 +155,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <div id="win" hidden><p id="wint"></p><p id="wins"></p><button id="again" type="button">Rivincita adesso</button></div>
   <div class="touch" id="stick"><div id="knob"></div></div>
   <button class="touch" id="fire" type="button">Spara</button>
-  <div class="touch" id="emo"><button type="button" id="dropb" hidden>lascia</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
+  <div class="touch" id="emo"><button type="button" id="jumpb">salta</button><button type="button" id="dropb" hidden>lascia</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
   <section id="start">
     <form class="card" id="form">
       <h1>KWFlag</h1>
@@ -182,7 +182,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <div class="foot">
       <p class="hint stats"><span id="stats"></span> <button type="button" id="statreset" class="lnk">Azzera</button></p>
       <details class="help"><summary>Come si gioca</summary>
-        <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
+        <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
@@ -255,7 +255,13 @@ const FLOORS = [['#c9f3df','#b3ead0'],['#ffe3d3','#ffcfb6'],['#d7ecff','#bfdcfb'
 let walls = CLASSIC, floorT = 0, mapSeed = 0, mapEp = 0;
 /* power-ups: c = category (0 attack, 1 defence, 2 movement), d = seconds */
 const PU = { rapid:{ n:'Tiro rapido', c:0, d:8 }, bounce:{ n:'Rimbalzo', c:0, d:10 }, pierce:{ n:'Perforante', c:0, d:6 },
-  shield:{ n:'Scudo', c:1, d:20 }, ghost:{ n:'Invisibilità', c:1, d:7 }, turbo:{ n:'Turbo', c:2, d:6 }, dim:{ n:'Salto 3D', c:2, d:15 } };
+  shield:{ n:'Scudo', c:1, d:20 }, ghost:{ n:'Invisibilità', c:1, d:7 }, turbo:{ n:'Turbo', c:2, d:6 }, dim:{ n:'Salto 3D', c:2, d:15 },
+  laser:{ n:'Laser', c:0, d:8 }, missile:{ n:'Missile guidato', c:0, d:8 }, shock:{ n:'Onda d\'urto', c:0, d:8 },
+  stealth:{ n:'Stealth', c:1, d:10 }, ident:{ n:'Identifica', c:2, d:15 } };
+/* flags bots never take: they need a player's judgement or a camera */
+const BOTSKIP = new Set(['dim','laser','missile','shock','ident','stealth']);
+/* special shots, flag bits shared on the network: 8 laser (x,y start → vx,vy end), 16 guided missile, 32 shock wave (vx = radius) */
+const LASER = 8, MISSILE = 16, SHOCK = 32;
 /* heights for the 2.5D view: yellow blocks (style 2) are platforms you can climb with 'Salto 3D' */
 const PH = 36, WH = 56, ELZ = PH/2, isPlat = w => w[4] === 2;
 const canClimb = () => fogOn() || fxOn('dim');
@@ -277,9 +283,11 @@ const BAD = { rev:{ n:'Comandi invertiti' }, slow:{ n:'Lumaca' }, trig:{ n:'Gril
 const BADK = Object.keys(BAD), GOOD_MAX = 30000, BAD_D = 10000, MYST = ['#e9e1f7','#6b5a85'];
 const fxName = k => (PU[k] || BAD[k] || { n:k }).n;
 const isMyst = (p,g) => prng((mapSeed*13 + p*7907 + g*15485863) | 0)() < 1/3;
+/* what a '?' flag really is: decided by seed, spot and generation, so everyone (and 'Identifica') agrees */
+const mystKind = (p,g) => { const r = prng((mapSeed*17 + p*331 + g*7919) | 0); return r() < .5 ? PUK[Math.floor(r()*PUK.length)] : BADK[Math.floor(r()*BADK.length)]; };
 const heldKey = () => { const now = performance.now(); for (const k in me.fx) if (me.fx[k] > now) return k; return null; };
 const botHolding = b => !!b.fx && Object.keys(b.fx).some(k => b.fx[k] > performance.now());
-let heldPrev = new Set(), holdHintAt = 0;
+let heldPrev = new Set(), holdHintAt = 0, jumpReq = false;
 /* a slot is busy while someone carries its flag (me, other players, bots of the host) */
 function heldSlots(){
   const h = new Set(); if (me.hs >= 0) h.add(me.hs);
@@ -302,7 +310,7 @@ const bOn = (b,k) => !!b.fx && (b.fx[k] || 0) > performance.now();
 const bfxStr = b => (bOn(b,'shield') ? 's' : '') + (bOn(b,'ghost') ? 'g' : '') + (bOn(b,'turbo') ? 't' : '');
 const BUBR = [140, 320, 520];
 const fxOn = k => (me.fx[k] || 0) > performance.now();
-const fxStr = () => (fxOn('shield') ? 's' : '') + (fxOn('ghost') ? 'g' : '') + (fxOn('turbo') ? 't' : '');
+const fxStr = () => (fxOn('shield') ? 's' : '') + (fxOn('ghost') ? 'g' : '') + (fxOn('turbo') ? 't' : '') + (fxOn('stealth') ? 'h' : '');
 /* teleporter pair + 3 symmetric pairs of power-up bubbles, from the same seeded rng as the walls */
 function withFeatures(list, floor, rng, rot){
   const M = (x,y) => rot ? [W-x, H-y] : [W-x, y], picked = [];
@@ -409,7 +417,7 @@ function circleHits(x,y,r){
 }
 function pushOut(o,r,climb){
   for (const w of walls){
-    if (climb && isPlat(w) && canEnter(w,o)) continue;
+    if (isPlat(w) && ((o.z || 0) >= PH - 2 || (climb && canEnter(w,o)))) continue;   // over it in a jump, or in through a ramp
     const cx = clamp(o.x,w[0],w[0]+w[2]), cy = clamp(o.y,w[1],w[1]+w[3]), dx = o.x-cx, dy = o.y-cy, d2 = dx*dx+dy*dy;
     if (d2 >= r*r) continue;
     if (d2 > 1e-6){ const d = Math.sqrt(d2); o.x = cx + dx/d*r; o.y = cy + dy/d*r; }
@@ -552,7 +560,15 @@ function shoot(t){
   const mine = t === me, on = k => mine ? fxOn(k) : t.bot && bOn(t,k), pr = on('pierce') ? 1 : 0;
   t.cool = t.bot ? (L.cd[0] + rnd()*(L.cd[1]-L.cd[0])) / (on('rapid') ? 2.5 : 1) : fxOn('rapid') ? .12 : .35;
   const bz = (t.z || 0) >= ELZ ? PH : 0;
+  if (mine && fxOn('shock')){ t.cool = 2.2; bid = (bid + 1) % 100000; sfx('tele', t.x, t.y);
+    t.bullets.push({ id:bid, x:t.x, y:t.y, vx:R, vy:0, life:.55, f:SHOCK, z:bz, pr:1 }); return; }
   if (inWall(bx,by,bz) && !(pr && bx > 0 && by > 0 && bx < W && by < H)) { puff(bx,by); return; }
+  if (mine && fxOn('laser')){
+    let ex = bx, ey = by; for (let d = 0; d < 1400; d += 8){ const x = bx + Math.cos(a)*d, y = by + Math.sin(a)*d; if (inWall(x,y,bz)) break; ex = x; ey = y; }
+    t.cool = 1.1; bid = (bid + 1) % 100000; sfx('shoot', t.x, t.y); sfx('bounce', t.x, t.y);
+    t.bullets.push({ id:bid, x:bx, y:by, vx:ex, vy:ey, life:.3, f:LASER, z:bz, pr:1 }); return; }
+  if (mine && fxOn('missile')){ t.cool = .7; bid = (bid + 1) % 100000; sfx('shoot', t.x, t.y);
+    t.bullets.push({ id:bid, x:bx, y:by, vx:Math.cos(a)*sp*.75, vy:Math.sin(a)*sp*.75, life:2.6, f:MISSILE, pr:0, bn:0, z:bz }); return; }
   bid = (bid + 1) % 100000;
   sfx('shoot', t.x, t.y);
   t.bullets.push({ id:bid, x:bx, y:by, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:BL/SPD(), pr, bn:on('bounce') ? 3 : 0, z:bz });
@@ -560,11 +576,14 @@ function shoot(t){
 function moveTank(t,turn,thr,dt,rate,fwd,back){
   t.a += turn*rate*dt;
   const sp = thr >= 0 ? thr*fwd : thr*back, ox = t.x, oy = t.y;
-  const climb = t === me ? canClimb() : !!t.bot && fogOn();
+  const climb = t === me ? canClimb() || (me.z || 0) > .5 : !!t.bot && fogOn();
   t.x += Math.cos(t.a)*sp*dt; t.y += Math.sin(t.a)*sp*dt; pushOut(t,R,climb);
   if (t.bot) t.z = climb ? platZ(t.x, t.y) : 0;
   if (t === me){
-    me.z = climb ? platZ(me.x, me.y) : 0;
+    /* jumping: vz from Tab, gravity 900; the ground is the ramp or platform under you, if you may stand on it */
+    const gz = climb ? platZ(me.x, me.y) : 0;
+    if (me.vz || me.z > gz + .5){ me.z += (me.vz || 0)*dt; me.vz = (me.vz || 0) - 900*dt; if (me.z <= gz){ if (me.vz < -150) sfx('bounce'); me.z = gz; me.vz = 0; } }
+    else me.z = gz;
     for (const o of others(me)){ if (((o.z || 0) >= ELZ) !== (me.z >= ELZ)) continue; const dx = t.x-o.x, dy = t.y-o.y, d = Math.hypot(dx,dy); if (d > 0 && d < 2*R){ t.x += dx/d*(2*R-d); t.y += dy/d*(2*R-d); pushOut(t,R,climb); } }
   }
   t.vx = (t.x-ox)/dt; t.vy = (t.y-oy)/dt; t.tread += sp*dt;
@@ -578,6 +597,7 @@ function updateMe(dt,now){
   if (stick.on){ const m = Math.min(1, Math.hypot(stick.x,stick.y)); if (m > .15){ const da = angDiff(Math.atan2(stick.y,stick.x) + (fogOn() ? camYaw + Math.PI/2 : 0), me.a); turn = clamp(da*3,-1,1); thr = Math.abs(da) < 1.2 ? m*Math.cos(da) : 0; } }
   const tb = fxOn('turbo');
   if (fxOn('rev')) turn = -turn;
+  if (jumpReq){ jumpReq = false; if (!me.vz && me.z <= platZ(me.x, me.y) + .5 && !overAt){ me.vz = 300; sfx('pick'); } }
   const k = SPD() * (fxOn('slow') ? .55 : 1); moveTank(me,turn,thr,dt,(tb ? 3.3 : 2.8)*(fogOn() ? 1.1 : 1),(tb ? TS*1.6 : TS)*k,(tb ? 140 : 110)*k);
   tele(me,dt);
   if (tb && Math.hypot(me.vx,me.vy) > 40) trail(me.x,me.y,me.a);
@@ -655,7 +675,7 @@ function nearBubble(b,now){
   b.nbT = now + 400; b.nb = null; let bd = BUBR[lvl];
   if ((mode === 'ctf' && carrying(b)) || botHolding(b)) return null;
   for (let s = 0; s < slots.length; s++){
-    if (!slotReady(s,now) || isMyst(slots[s].p, puGen[s]) || puType(slots[s].p, puGen[s]) === 'dim') continue;
+    if (!slotReady(s,now) || isMyst(slots[s].p, puGen[s]) || BOTSKIP.has(puType(slots[s].p, puGen[s]))) continue;
     const d = Math.hypot(slots[s].x-b.x, slots[s].y-b.y);
     if (d < bd){ bd = d; b.nb = { x:slots[s].x, y:slots[s].y, stop:0 }; }
   }
@@ -720,8 +740,26 @@ function setLevel(i){
   $('lvl').value = String(lvl);
   $('c-lvl').value = String(lvl);
 }
+/* geometry of a hit, the same for every kind of shot */
+function shotHits(b,x,y,rad){
+  const f = b.f || 0;
+  if (f & LASER){ const dx = b.vx - b.x, dy = b.vy - b.y, l2 = dx*dx + dy*dy || 1, t = clamp(((x-b.x)*dx + (y-b.y)*dy)/l2, 0, 1); return (b.x + dx*t - x)**2 + (b.y + dy*t - y)**2 < rad*rad; }
+  if (f & SHOCK){ const d = Math.hypot(x - b.x, y - b.y); return d < b.vx + rad && d > b.vx - 48; }
+  return (b.x-x)**2 + (b.y-y)**2 < rad*rad;
+}
+/* a guided missile turns toward the nearest enemy in front of it */
+function guide(b,tm,dt){
+  let best = null, bd = 650;
+  for (const o of tgts){ if (o.ref === me || !foe(tm,o.tm) || o.gh) continue; const ox = o.ref ? o.ref.x : o.x, oy = o.ref ? o.ref.y : o.y, d = Math.hypot(ox-b.x, oy-b.y);
+    if (d < bd && Math.abs(angDiff(Math.atan2(oy-b.y, ox-b.x), Math.atan2(b.vy,b.vx))) < 1.2){ bd = d; best = { x:ox, y:oy }; } }
+  if (!best) return;
+  const a = Math.atan2(b.vy,b.vx), sp = Math.hypot(b.vx,b.vy), na = a + clamp(angDiff(Math.atan2(best.y-b.y, best.x-b.x), a), -2.6*dt, 2.6*dt);
+  b.vx = Math.cos(na)*sp; b.vy = Math.sin(na)*sp;
+}
 function stepBullets(list,dt){
   for (let i = list.length-1; i >= 0; i--){ const b = list[i], ox = b.x, oy = b.y;
+    if (b.f & (LASER|SHOCK)){ if (b.f & SHOCK) b.vx += 420*dt; if ((b.life -= dt) <= 0) list.splice(i,1); continue; }
+    if (b.f & MISSILE){ guide(b, team, dt); if (Math.random() < .5) parts.push({ x:b.x, y:b.y, vx:0, vy:0, life:.35, max:.35, c:'#ffd0f4', sh:2, r:4, rot:0 }); }
     b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
     if (b.life <= 0){ puff(b.x,b.y); list.splice(i,1); continue; }
     if (b.pr){ if (b.x < 0 || b.y < 0 || b.x > W || b.y > H){ puff(b.x,b.y); list.splice(i,1); } continue; }
@@ -736,15 +774,16 @@ function stepBullets(list,dt){
 function hits(now){
   for (let i = me.bullets.length-1; i >= 0; i--){ const b = me.bullets[i]; let hit = false;
     if (b.dead){ if (now > b.dead) me.bullets.splice(i,1); continue; }
-    for (const t of bots) if (t.alive && t.inv <= 0 && foe(team,t.tm) && !((t.z || 0) >= ELZ && !(b.z >= ELZ) && !b.pr) && (b.x-t.x)**2 + (b.y-t.y)**2 < (R+5)**2){
+    const spc = (b.f || 0) & (LASER|SHOCK);
+    for (const t of bots) if (t.alive && t.inv <= 0 && foe(team,t.tm) && !((t.z || 0) >= ELZ && !(b.z >= ELZ) && !b.pr) && shotHits(b, t.x, t.y, R+5)){
       if (botShield(t)){ hit = true; break; }
-      me.bk[t.key] = (me.bk[t.key] || 0) + 1; die(t,now); addFeed(me.name+' → '+t.name); hit = true; break; }
-    if (!hit) for (const t of rbots.values()) if (t.alive && !t.iv && !(t.hitUntil > now) && foe(team,t.tm) && !(t.el && !(b.z >= ELZ) && !b.pr) && (b.x-t.rx)**2 + (b.y-t.ry)**2 < (R+5)**2){
-      t.hitUntil = now + 1500; puff(b.x,b.y); hit = true;
+      me.bk[t.key] = (me.bk[t.key] || 0) + 1; die(t,now); addFeed(me.name+' → '+t.name); hit = !spc; if (!spc) break; }
+    if (!hit) for (const t of rbots.values()) if (t.alive && !t.iv && !(t.hitUntil > now) && foe(team,t.tm) && !(t.el && !(b.z >= ELZ) && !b.pr) && shotHits(b, t.rx, t.ry, R+5)){
+      t.hitUntil = now + 1500; puff(t.rx,t.ry); hit = !spc;
       if ((t.fx || '').includes('s')){ me.bs[t.key] = (me.bs[t.key] || 0) + 1; sfx('bloop', t.rx, t.ry); boomSoft(t.rx, t.ry, '#8fd3ff'); }
       else { me.bk[t.key] = (me.bk[t.key] || 0) + 1; addFeed(me.name+' → '+t.name); }
-      sendNow(); break; }
-    if (!hit) for (const r of remotes.values()) if (r.alive && !r.iv && foe(team,r.tm) && !(r.el && !(b.z >= ELZ) && !b.pr) && (b.x-r.rx)**2 + (b.y-r.ry)**2 < (R+3)**2){ puff(b.x,b.y); b.dead = now + 150; break; }
+      sendNow(); if (!spc) break; }
+    if (!hit) for (const r of remotes.values()) if (r.alive && !r.iv && foe(team,r.tm) && !(r.el && !(b.z >= ELZ) && !b.pr) && shotHits(b, r.rx, r.ry, R+3)){ if (spc) continue; puff(b.x,b.y); b.dead = now + 150; break; }
     if (hit) me.bullets.splice(i,1);
   }
   for (const s of bots) for (let i = s.bullets.length-1; i >= 0; i--){ const b = s.bullets[i];
@@ -768,7 +807,7 @@ function hits(now){
   for (const r of remotes.values()) if (foe(r.tm,team)) for (const b of r.bc){
     if (me.z >= ELZ && !(b.f & 5)) continue;
     const key = r.key + ':' + b.id;
-    if ((b.x-me.x)**2 + (b.y-me.y)**2 >= (R+3)**2 || ign.get(key) > now) continue;
+    if (!shotHits(b, me.x, me.y, R+3) || ign.get(key) > now) continue;
     if (useShield()){ ign.set(key, now + 2500); continue; }
     me.kb[r.key] = (me.kb[r.key] || 0) + 1; die(me,now); me.killer = r.name; addFeed(r.name+' → '+me.name); sendNow(); return; }
 }
@@ -798,7 +837,7 @@ function powerStep(now){
     for (let s = 0; s < slots.length; s++){
       const sl = slots[s];
       if (!slotReady(s,now) || Math.hypot(b.x-sl.x, b.y-sl.y) > R+20 || isMyst(sl.p, puGen[s])) continue;
-      const k = puType(sl.p, puGen[s]); if (k === 'dim') continue;
+      const k = puType(sl.p, puGen[s]); if (BOTSKIP.has(k)) continue;
       puGen[s]++; puAt[s] = now; b.fx = { [k]:now + PU[k].d*1000 }; b.hs = s; b.nbT = 0; heldNow.add(s); heldPrev.add(s);
       addFeed(b.name + ' prende ' + PU[k].n); sfx('pick', sl.x, sl.y); boomSoft(sl.x, sl.y, PUCAT[PU[k].c][1]); sendNow(); break;
     }
@@ -809,7 +848,7 @@ function powerStep(now){
     if (!slotReady(s,now) || Math.hypot(me.x-sl.x, me.y-sl.y) > R+20) continue;
     if (heldKey()){ if (now - holdHintAt > 2500){ holdHintAt = now; pops.push({ x:sl.x, y:sl.y-30, text:'una alla volta!', t:0 }); addFeed('Hai già una bandierina: premi Q per lasciarla'); } continue; }
     const myst = isMyst(sl.p, puGen[s]); let k = puType(sl.p, puGen[s]);
-    if (myst) k = rnd() < .5 ? PUK[Math.floor(rnd()*PUK.length)] : BADK[Math.floor(rnd()*BADK.length)];
+    if (myst) k = mystKind(sl.p, puGen[s]);
     const bad = !!BAD[k];
     puGen[s]++; puAt[s] = now; me.hs = s; heldNow.add(s); heldPrev.add(s);
     me.fx = { [k]:now + (bad ? BAD_D : GOOD_MAX) }; sfx(bad ? 'die' : 'pick');
@@ -968,15 +1007,16 @@ function netRead(){
     r.vx = num(pr.vx,-900,900,0); r.vy = num(pr.vy,-900,900,0);
     const was = r.alive; r.alive = pr.al === 1; r.iv = pr.iv === 1;
     const prevIds = new Set((r.bul || []).map(b => b.id));
-    r.bul = (Array.isArray(pr.b) ? pr.b : []).slice(0,8).filter(b => Array.isArray(b) && (b.length === 5 || b.length === 6)).map(b => ({ id:num(b[0],0,1e6,0), x:num(b[1],0,W,-99), y:num(b[2],0,H,-99), vx:num(b[3],-1000,1000,0), vy:num(b[4],-1000,1000,0), f:Math.round(num(b[5],0,7,0)) }));
+    r.bul = (Array.isArray(pr.b) ? pr.b : []).slice(0,8).filter(b => Array.isArray(b) && (b.length === 5 || b.length === 6)).map(b => { const f = Math.round(num(b[5],0,63,0)); return { id:num(b[0],0,1e6,0), x:num(b[1],0,W,-99), y:num(b[2],0,H,-99),
+      vx:f & LASER ? num(b[3],0,W,0) : f & SHOCK ? num(b[3],0,400,0) : num(b[3],-1000,1000,0), vy:f & LASER ? num(b[4],0,H,0) : num(b[4],-1000,1000,0), f }; });
     if (!fresh && r.bul.some(b => !prevIds.has(b.id))) sfx('shoot', r.x, r.y);
     { const ok = Array.isArray(pr.em) && pr.em.length === 2, es = ok ? Math.round(num(pr.em[1],0,1e6,0)) : 0, ei = ok ? Math.round(num(pr.em[0],0,EMO.length-1,0)) : 0;
       if (fresh) r.emSeq = es;
       else if (es !== r.emSeq){ if (es > 0){ r.emAt = performance.now(); r.emI = ei; sfx('emote', r.x, r.y); } r.emSeq = es; } }
-    r.fx = typeof pr.fx === 'string' ? pr.fx.replace(/[^sgt]/g,'').slice(0,3) : '';
+    r.fx = typeof pr.fx === 'string' ? pr.fx.replace(/[^sgth]/g,'').slice(0,4) : '';
     r.pu = Array.isArray(pr.pu) ? pr.pu.slice(0,64).map(v => Math.round(num(v,0,1e6,0))) : null;
     r.seed = Math.floor(num(pr.m,0,0x7fffffff,0)); r.ep = Math.floor(num(pr.me,0,1e6,0));
-    r.el = pr.el === 1;
+    r.el = pr.el === 1; r.z = num(pr.z,0,120,r.el ? PH : 0);
     r.md = pr.md === 'ctf' ? 'ctf' : 'ffa'; r.tm = pr.tm === 1 ? 1 : 0; r.bo = [3,5,11].includes(pr.bo) ? pr.bo : 3; r.sz = SIZES[pr.sz] ? pr.sz : 'S';
     r.fl = r.md === 'ctf' && Array.isArray(pr.fl) ? [parseFlag(pr.fl[0],0), parseFlag(pr.fl[1],1)] : null;
     r.sc = Array.isArray(pr.sc) ? [Math.round(num(pr.sc[0],0,999,0)), Math.round(num(pr.sc[1],0,999,0))] : null;
@@ -1268,13 +1308,13 @@ function netSmooth(dt){
     const k = Math.min(1, dt*12); r.rx += (tx-r.rx)*k; r.ry += (ty-r.ry)*k; r.ra += angDiff(r.a, r.ra)*k;
     r.tread += Math.hypot(r.vx,r.vy)*dt;
     const ba = (t - r.at)/1000;
-    r.bc = ba > .4 ? [] : r.bul.map(b => ({ id:b.id, f:b.f, x:b.x + b.vx*ba, y:b.y + b.vy*ba, vx:b.vx, vy:b.vy })).filter(b => b.f & 1 ? b.x > 0 && b.y > 0 && b.x < W && b.y < H : !inWall(b.x,b.y,b.f & 4 ? PH : 0));
+    r.bc = ba > .4 ? [] : r.bul.map(b => b.f & (LASER|SHOCK) ? { ...b, vx:b.f & SHOCK ? b.vx + 420*ba : b.vx } : ({ id:b.id, f:b.f, x:b.x + b.vx*ba, y:b.y + b.vy*ba, vx:b.vx, vy:b.vy })).filter(b => b.f & (LASER|SHOCK|1) ? b.x > 0 && b.y > 0 && b.x < W && b.y < H : !inWall(b.x,b.y,b.f & 4 ? PH : 0));
     if (r.alive && r.fx.includes('t') && Math.hypot(r.vx,r.vy) > 40) trail(r.rx,r.ry,r.ra);
   }
 }
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
-    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0)]), el:me.z >= ELZ ? 1 : 0, kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
+    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
     bt:isHost && remotes.size ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0]) : null,
     bb:isHost && remotes.size ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
@@ -1303,7 +1343,8 @@ function tank(x,y,a,hue,name,o,now){
   if (gh) ctx.globalAlpha *= o.me ? .4 : .1;
   if (fx.includes('s')){ ctx.fillStyle = 'rgba(143,211,255,.18)'; ell(0,0,34,34); ctx.strokeStyle = 'rgba(31,111,168,.75)'; ctx.lineWidth = 3; ctx.setLineDash([8,6]); ctx.lineDashOffset = -now/40; ctx.beginPath(); ctx.arc(0,0,34,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
   const sq = o.sq || 1, lift = o.lift || 0;
-  if (o.el && sq === 1){ ctx.fillStyle = 'rgba(60,30,90,.22)'; ell(18,26,30,22); ctx.scale(1.14,1.14); ctx.translate(0,-8); }
+  const ev = o.el === true ? 1 : Math.min(1.4, o.el || 0);
+  if (ev > .02 && sq === 1){ ctx.fillStyle = 'rgba(60,30,90,.22)'; ell(4+14*ev,9+17*ev,30,22); ctx.scale(1+.14*ev,1+.14*ev); ctx.translate(0,-8*ev); }
   else { ctx.fillStyle = 'rgba(60,30,90,.18)'; ell(4,9*sq,30,22*sq); }
   if (sq < .98){ ctx.save(); ctx.translate(0,7); ctx.scale(1,sq); ctx.rotate(a); ctx.fillStyle = '#3a2a55'; rr(-24,-24,48,48,12); ctx.fill(); ctx.restore(); }
   ctx.save(); ctx.scale(1,sq); ctx.rotate(a);
@@ -1343,6 +1384,11 @@ function trail(x,y,a){ if (rnd() < .5) parts.push({ x:x-Math.cos(a)*26+(rnd()-.5
 const BULC = [['255,216,74','#ffd84a','#e09a00'],['255,143,200','#ff8fc8','#c23d82'],['159,240,192','#9ff0c0','#2e9e63']];
 function bullet(b,now){
   if (b.dead) return;
+  if ((b.f || 0) & LASER){ ctx.lineCap = 'round'; for (const [w,c] of [[12,'rgba(255,143,200,.35)'],[5,'#ff8fc8'],[2,'#fff']]){ ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.vx,b.vy); ctx.stroke(); } return; }
+  if ((b.f || 0) & SHOCK){ ctx.strokeStyle = 'rgba(185,162,255,.85)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(b.x,b.y,b.vx,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x,b.y,Math.max(1,b.vx-6),0,Math.PI*2); ctx.stroke(); return; }
+  if ((b.f || 0) & MISSILE){ const a = Math.atan2(b.vy,b.vx); ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(a); ctx.fillStyle = '#ff8fc8'; ctx.strokeStyle = '#c23d82'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(-8,-6); ctx.lineTo(-4,0); ctx.lineTo(-8,6); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ell(3,0,2,2); ctx.restore(); return; }
   const f = b.f ?? ((b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0)), c = BULC[f & 1 ? 1 : f & 2 ? 2 : 0];
   for (let i = 1; i <= 3; i++){ ctx.fillStyle = 'rgba(' + c[0] + ',' + (.35 - i*.1) + ')'; ell(b.x - b.vx*.018*i, b.y - b.vy*.018*i, 5-i, 5-i); }
   ctx.fillStyle = c[1]; ctx.strokeStyle = c[2]; ctx.lineWidth = 2; star(b.x,b.y,8,now/120); ctx.fill(); ctx.stroke();
@@ -1412,11 +1458,15 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     ctx.restore(); } }); };
   for (const t of bots) if (t.alive) tk(t.x,t.y,t.z || 0,t.a,th(t.hue,t.tm),t.name,{ fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, inv:t.inv > 0, tread:t.tread, seed:t.seed }, null, t.tm);
   for (const t of rbots.values()) if (t.alive) tk(t.rx,t.ry,t.el ? PH : 0,t.ra,th(t.hue,t.tm),t.name,{ fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, inv:t.iv, tread:t.tread, seed:t.ni*1.3 }, null, t.tm);
-  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.el ? PH : 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
+  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.z || 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
     r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g') ? { t:EMO[r.emI], age:(pn - r.emAt)/1000 } : null, r.tm);
   if (me.playing && me.alive) tk(me.x,me.y,me.z || 0,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:mode === 'ctf' ? team : -1, me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },
     me.emAt && pn - me.emAt < 2500 ? { t:EMO[me.em], age:(pn - me.emAt)/1000 } : null, team);
-  const bl = (b,z,mine) => { if (!mine && !seen(b.x,b.y,-2)) return; items.push({ k:-dep(b.x,b.y), f:() => bill(b.x, b.y, z + 14, () => bullet(b,now), true) }); };
+  const bl = (b,z,mine) => { if (!mine && !seen(b.x,b.y,-2)) return; const f = b.f || 0;
+    if (f & SHOCK) return ground(b.x, b.y, () => bullet(b,now));
+    if (f & LASER) return items.push({ k:-dep(b.x,b.y) + 1e4, f:() => { const p = P(b.x,b.y,z+14), q = P(b.vx,b.vy,z+14); if (!p || !q) return; ctx.lineCap = 'round';
+      for (const [w,c] of [[12,'rgba(255,143,200,.35)'],[5,'#ff8fc8'],[2,'#fff']]){ ctx.strokeStyle = c; ctx.lineWidth = w*Math.min(p.k,1.5); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); } } });
+    items.push({ k:-dep(b.x,b.y), f:() => bill(b.x, b.y, z + 14, () => bullet(b,now), true) }); };
   me.bullets.forEach(b => bl(b, b.z || 0, true)); bots.forEach(t => t.bullets.forEach(b => bl(b, b.z || 0))); rbots.forEach(t => t.bc.forEach(b => bl(b, b.f & 4 ? PH : 0))); remotes.forEach(r => r.bc.forEach(b => bl(b, b.f & 4 ? PH : 0)));
   for (const g of ghosts) if (seen(g.x,g.y,-2)) items.push({ k:-dep(g.x,g.y), f:() => bill(g.x, g.y, 20, () => ghost(g,now)) });
   items.sort((a,b) => a.k - b.k).forEach(it => it.f());
@@ -1499,6 +1549,11 @@ function puIcon(k,x,y){
   ctx.beginPath();
   if (k === 'rapid'){ for (const dx of [-7,0,7]){ star(x+dx,y,4.6,-Math.PI/2); ctx.fill(); } return; }
   if (k === 'bounce'){ ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.moveTo(x-10,y+6); ctx.lineTo(x-4,y-6); ctx.lineTo(x+2,y+6); ctx.lineTo(x+8,y-6); ctx.stroke(); ell(x+8,y-6,2.6,2.6); return; }
+  if (k === 'laser'){ ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x-11,y+6); ctx.lineTo(x+11,y-6); ctx.stroke(); ell(x+11,y-6,3,3); return; }
+  if (k === 'missile'){ ctx.beginPath(); ctx.moveTo(x+11,y); ctx.lineTo(x-7,y-7); ctx.lineTo(x-3,y); ctx.lineTo(x-7,y+7); ctx.closePath(); ctx.fill(); return; }
+  if (k === 'shock'){ ctx.lineWidth = 2.5; for (const r of [4,8,12]){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke(); } return; }
+  if (k === 'stealth'){ ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x-9,y+9); ctx.lineTo(x+9,y-9); ctx.stroke(); ell(x,y,2.5,2.5); return; }
+  if (k === 'ident'){ ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x-2,y-2,7,0,Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x+3,y+3); ctx.lineTo(x+10,y+10); ctx.stroke(); return; }
   if (k === 'dim' && fogOn()){ ell(x,y,5.5,5.5); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath();
     for (let i = 0; i < 8; i++){ const a = i*Math.PI/4; ctx.moveTo(x + Math.cos(a)*8, y + Math.sin(a)*8); ctx.lineTo(x + Math.cos(a)*12, y + Math.sin(a)*12); } ctx.stroke(); return; }
   if (k === 'dim'){ ctx.beginPath(); ctx.moveTo(x,y-11); ctx.lineTo(x+10,y-5); ctx.lineTo(x,y+1); ctx.lineTo(x-10,y-5); ctx.closePath(); ctx.fill();
@@ -1523,7 +1578,7 @@ function bubble(s,now){
   if (myst){ ctx.font = '700 22px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = c[1]; ctx.fillText('?', 0, 1); }
   else { ctx.fillStyle = c[1]; ctx.strokeStyle = c[1]; puIcon(k, 0, 0); }
   ctx.restore();
-  const label = myst ? '?' : PU[k].n;
+  const label = myst ? (fxOn('ident') ? '? = ' + fxName(mystKind(sl.p, puGen[s])) : '?') : PU[k].n;
   ctx.font = '600 13px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   ctx.lineWidth = 4; ctx.strokeStyle = '#fff6fb'; ctx.strokeText(label, sl.x, sl.y+24); ctx.fillStyle = '#2b1846'; ctx.fillText(label, sl.x, sl.y+24);
 }
@@ -1553,11 +1608,11 @@ function draw(now){
   me.bullets.forEach(b => bullet(b,now)); bots.forEach(t => t.bullets.forEach(b => bullet(b,now))); rbots.forEach(t => t.bc.forEach(b => bullet(b,now))); remotes.forEach(r => r.bc.forEach(b => bullet(b,now)));
   for (const t of bots) if (t.alive) tank(t.x,t.y,t.a,th(t.hue,t.tm),t.name,{ el:(t.z || 0) >= ELZ, fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, inv:t.inv > 0, tread:t.tread, seed:t.seed },now);
   for (const t of rbots.values()) if (t.alive) tank(t.rx,t.ry,t.ra,th(t.hue,t.tm),t.name,{ el:t.el, fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, inv:t.iv, tread:t.tread, seed:t.ni*1.3 },now);
-  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:r.el, fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
+  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:(r.z || 0)/PH, fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
   const pn = performance.now();
   for (const r of remotes.values()) if (r.alive && r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g')) speech(r.rx, r.ry, EMO[r.emI], (pn - r.emAt)/1000);
   if (me.playing && me.alive && me.emAt && pn - me.emAt < 2500) speech(me.x, me.y, EMO[me.em], (pn - me.emAt)/1000);
-  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:mode === 'ctf' ? team : -1, me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
+  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ el:(me.z || 0)/PH, fx:fxStr(), tm:mode === 'ctf' ? team : -1, me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s === 1){ const p = flagPos(i); flagIcon(p.x+16, p.y-4, i, now, .75); }
   for (const p of parts){ ctx.globalAlpha = Math.max(0,p.life/p.max); ctx.fillStyle = p.c;
     if (p.sh === 0) heart(p.x,p.y,p.r); else if (p.sh === 1){ star(p.x,p.y,p.r*1.3,p.rot); ctx.fill(); } else ell(p.x,p.y,p.r,p.r); }
@@ -1591,7 +1646,7 @@ function minimap(ox, oy, mw){
   for (const t of rbots.values()) if (t.alive && !(t.fx || '').includes('g')) mark(t.rx,t.ry,t.hue,t.tm);
   for (const pr of pads) for (const p of pr){ ctx.fillStyle = '#7b5fd6'; ell(X+p.x*ms, Y+p.y*ms, 3.5, 3.5); }
   for (let s = 0; s < slots.length; s++) if (slotReady(s, performance.now())){ ctx.fillStyle = isMyst(slots[s].p, puGen[s]) ? MYST[1] : PUCAT[PU[puType(slots[s].p, puGen[s])].c][1]; ell(X+slots[s].x*ms, Y+slots[s].y*ms, 2.5, 2.5); }
-  for (const r of remotes.values()) if (r.alive && !r.fx.includes('g')) mark(r.rx,r.ry,r.hue,r.tm);
+  for (const r of remotes.values()) if (r.alive && !r.fx.includes('g') && !r.fx.includes('h')) mark(r.rx,r.ry,r.hue,r.tm);
   if (me.playing && me.alive){ dot(me.x,me.y,'#ff5c9d',4);
     if (fogOn()){ ctx.save(); ctx.beginPath(); ctx.rect(X, Y, mw, mh); ctx.clip(); ctx.strokeStyle = 'rgba(255,92,157,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X+me.x*ms, Y+me.y*ms, fogR()*ms, 0, Math.PI*2); ctx.stroke(); ctx.restore(); } }
   if (mode === 'ctf') for (let i = 0; i < 2; i++){ const p = flagPos(i); if (flags[i].s === 1 && !inSight(p.x, p.y, 1-i)) continue;
@@ -1612,9 +1667,9 @@ function radar(cx, cy, rad){
   const blip = (x,y,c,tm) => { if (Math.hypot(x-ox, y-oy) > RADR) return; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, 4.5/k, 0, Math.PI*2); ctx.fill();
     if (mode === 'ctf' && tm >= 0){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5/k; ctx.stroke(); } };
   const col = (hue,tm) => mode === 'ctf' ? HUES[TEAMS[tm].h][0] : HUES[hue][0];
-  for (const t of bots) if (t.alive && !bOn(t,'ghost')) blip(t.x, t.y, col(t.hue,t.tm), t.tm);
-  for (const t of rbots.values()) if (t.alive && !(t.fx || '').includes('g')) blip(t.rx, t.ry, col(t.hue,t.tm), t.tm);
-  for (const r of remotes.values()) if (r.alive && !r.fx.includes('g')) blip(r.rx, r.ry, col(r.hue,r.tm), r.tm);
+  for (const t of bots) if (t.alive) blip(t.x, t.y, col(t.hue,t.tm), t.tm);
+  for (const t of rbots.values()) if (t.alive) blip(t.rx, t.ry, col(t.hue,t.tm), t.tm);
+  for (const r of remotes.values()) if (r.alive && !r.fx.includes('h')) blip(r.rx, r.ry, col(r.hue,r.tm), r.tm);
   if (mode === 'ctf') for (let i = 0; i < 2; i++){ const p = flagPos(i); if (Math.hypot(p.x-ox, p.y-oy) > RADR) continue; ctx.fillStyle = HUES[TEAMS[i].h][1]; star(p.x, p.y, 7/k, -Math.PI/2); ctx.fill(); }
   ctx.restore();
   if (me.playing && me.alive){ const a = me.a + rot; ctx.fillStyle = '#ff5c9d'; ctx.beginPath();
@@ -1671,7 +1726,7 @@ function frame(t){
   netRead(); adjustBots(); netSmooth(dt); buildTargets();
   updateMe(dt,t); bots.forEach(b => updateBot(b,dt,t));
   { const want = me.playing && (fogOn() || (me.alive && fxOn('dim'))) ? 1 : 0, prev = me.v3 || 0; me.v3 = clamp(prev + clamp(want - prev, -dt*1.8, dt*1.8), 0, 1);
-    if (want && prev === 0 && !fogOn()) sfx('tele'); if (!canClimb() && me.z > 0){ me.z = 0; pushOut(me,R,false); }
+    if (want && prev === 0 && !fogOn()) sfx('tele'); const cc = canClimb(); if (me.ccPrev && !cc && me.z > 0 && !me.vz){ me.z = 0; pushOut(me,R,false); } me.ccPrev = cc;
     const ty = fogOn() && me.playing ? me.a : -Math.PI/2; camYaw += angDiff(ty, camYaw) * Math.min(1, dt*5); }
   stepBullets(me.bullets,dt); bots.forEach(b => stepBullets(b.bullets,dt));
   hits(t); flagStep(t); powerStep(t); matchStep(t);
@@ -1692,6 +1747,7 @@ addEventListener('keydown', e => { audioInit(); if (e.target.closest && e.target
     else { showRadar = !showRadar; store.set('kw.radar', showRadar ? '1' : '0'); addFeed('Radar ' + (showRadar ? 'visibile' : 'nascosto') + ' (Maiusc+R)'); }
     return; }
   if (e.code === 'KeyQ' && !e.repeat && !e.shiftKey){ dropFlag(); return; }
+  if (e.code === 'Tab'){ e.preventDefault(); if (!e.repeat) jumpReq = true; return; }
   const em = { Digit1:0, Digit2:1, Digit3:2, Digit4:3 }[e.code]; if (em !== undefined && !e.repeat){ sendEmote(em); return; }
   const k = KM[e.code]; if (k){ keys.add(k); e.preventDefault(); } });
 addEventListener('pointerdown', () => audioInit(), { capture:true });
@@ -1767,6 +1823,7 @@ function boot(d){
   $('musb').addEventListener('click', e => { e.currentTarget.blur(); togM(); });
   for (const b of $('emo').querySelectorAll('[data-e]')) b.addEventListener('pointerdown', e => { e.preventDefault(); sendEmote(+b.dataset.e); });
   $('dropb').addEventListener('pointerdown', e => { e.preventDefault(); dropFlag(); });
+  $('jumpb').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
   audioUI();
   showStats();
   $('statreset').addEventListener('click', () => { stats = { p:0, w:0, k:0, d:0, c:0 }; saveStats(); });

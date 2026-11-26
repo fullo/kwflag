@@ -172,6 +172,19 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   per 0,6 s prima di riprendere il percorso.
 - Minimappa in alto a sinistra, radar in basso a destra (su touch più in alto e a sinistra dei pulsanti).
 
+## v10 — Salto e bandierine BZFlag (fase 1)
+- **Salto** (Tab, "salta" su telefono): velocità verticale 300, gravità 900, picco ~52 (sopra le piattaforme, sotto i muri 56).
+  In aria da quota 34 in su le piattaforme non bloccano: si atterra sopra e si scende dalle rampe, anche in 2D. Chi è in aria
+  sopra quota 18 conta "in alto" (non lo colpisce chi spara da terra). Presence `z` per disegnare il salto degli altri.
+- Nuove bandierine: **Laser** (raggio istantaneo fino al primo muro, 1400 max, ricarica 1,1 s; bit 8, x,y → vx,vy),
+  **Missile guidato** (0,75× velocità, curva fino a 2,6 rad/s verso il nemico più vicino entro 650 e ±70°; bit 16),
+  **Onda d'urto** (anello che si allarga a 420/s per 0,55 s, colpisce attraverso i muri; bit 32, vx = raggio),
+  **Stealth** (invisibile su radar e minimappa, visibile a schermo; l'Invisibilità ora è il contrario: si vede sul radar),
+  **Identifica** (mostra cosa c'è nelle «?»). I bot non le prendono.
+- Le «?» ora sono deterministiche (seme, posto, generazione): tutti e Identifica vedono la stessa cosa.
+- Colpi speciali: geometria comune `shotHits` (segmento per il laser, anello per l'onda, punto per gli altri); laser e onda
+  attraversano più bersagli e chi ne è colpito decide come sempre.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
