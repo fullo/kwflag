@@ -136,7 +136,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <button class="tg" id="sfxb" type="button" aria-pressed="true">Suoni sì</button>
   <button class="tg" id="musb" type="button" aria-pressed="false">Musica no</button>
   <label class="lv" id="szw"><span class="lt">Arena </span><select id="sz"><option value="S">Arena S</option><option value="M">Arena M</option><option value="L">Arena L</option><option value="XL">Arena XL</option></select></label>
-  <label class="lv" id="mdw"><span class="lt">Modalità </span><select id="md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option></select></label>
+  <label class="lv" id="mdw"><span class="lt">Modalità </span><select id="md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
   <label class="lv" id="vww"><span class="lt">Vista </span><select id="vw"><option value="2d">Vista 2D</option><option value="fog">Vista nebbia</option></select></label>
   <label class="lv" id="tmw" hidden><span class="lt">Squadra </span><select id="tm"><option value="auto">Squadra casuale</option><option value="0">Squadra Arancio ★</option><option value="1">Squadra Blu ♥</option></select></label>
   <label class="lv" id="few"><span class="lt">Partita </span><select id="fe"><option value="k10">primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
@@ -171,7 +171,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <div class="sw" id="sw" role="group" aria-label="Colore del carro (tutti contro tutti)"></div>
       <fieldset class="opts"><legend>Partita</legend>
         <label class="o"><span>Arena</span><select id="c-sz"><option value="S">S</option><option value="M">M (+50%)</option><option value="L">L (+150%)</option><option value="XL">XL (+500%)</option></select></label>
-        <label class="o"><span>Modalità</span><select id="c-md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option></select></label>
+        <label class="o"><span>Modalità</span><select id="c-md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
         <label class="o"><span>Vista</span><select id="c-vw"><option value="2d">2D dall'alto</option><option value="fog">2.5D nella nebbia</option></select></label>
         <label class="o" id="c-few"><span>Fine partita</span><select id="c-fe"><option value="k10">Primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
         <label class="o" id="c-bow" hidden><span>Fine partita</span><select id="c-bo"><option value="3">Al meglio di 3</option><option value="5">Al meglio di 5</option><option value="11">Al meglio di 11</option></select></label>
@@ -184,6 +184,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <details class="help"><summary>Come si gioca</summary>
         <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
+        <p>Modalità: tutti contro tutti; cattura la bandiera a squadre; re della collina (resta da solo nel cerchio giallo: vince chi arriva a 60 secondi); caccia al coniglio (tutti contro il coniglio, chi lo colpisce diventa il coniglio; un punto per ogni colpo); ondate di bot (tutti insieme contro ondate sempre più forti, con vite in comune).</p>
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
       </div>
@@ -235,7 +236,14 @@ const target = () => Math.ceil(bo/2);
 const winner = () => score[0] >= target() ? 0 : score[1] >= target() ? 1 : -1;
 const homeFlag = i => ({ v:0, s:0, x:BASES[i].x, y:BASES[i].y, h:'' });
 let flags = [homeFlag(0), homeFlag(1)], score = [0,0];
-const foe = (a,b) => mode !== 'ctf' || a !== b;
+/* koth and ffa: everyone against everyone; ctf/rabbit/waves: by team (rabbit = 1, hunters = 0; humans 0 vs bots 1) */
+const MODES = { ffa:'Tutti contro tutti', ctf:'Cattura la bandiera', koth:'Re della collina', rabbit:'Caccia al coniglio', waves:'Ondate di bot' };
+const MODESHORT = { ffa:'Tutti contro tutti', ctf:'Bandiera', koth:'Collina', rabbit:'Coniglio', waves:'Ondate' };
+const pmd = v => MODES[v] ? v : 'ffa';
+const foe = (a,b) => mode === 'ffa' || mode === 'koth' || a !== b;
+const KOTH_WIN = 60;
+let hill = null, rab = { v:0, k:'' }, wave = 0, waveAt = 0;
+const livesMax = () => Math.max(6, 3*((me.playing ? 1 : 0) + remotes.size));
 const th = (hue,tm) => mode === 'ctf' ? TEAMS[tm].h : hue;
 const CLASSIC = [
   [860,560,80,80,1],
@@ -555,7 +563,7 @@ function die(t,now){ if (t === me){ dropMine(); me.fx = {}; me.hs = -1; sfx('die
   if (t.bot){ t.fx = {}; t.hs = -1; for (let i = 0; i < 2; i++){ const f = flags[i]; if (f.s === 1 && f.h === t.key) setFlag(i, { v:f.v+1, s:2, x:r1(t.x), y:r1(t.y), h:'' }); } } t.alive = false; t.respawnAt = now + 3000; t.bullets = []; boom(t.x,t.y,t.hue); ghosts.push({ x:t.x, y:t.y, t:0 }); }
 function shoot(t){
   if (overAt) return;
-  const L = LEVELS[lvl], a = t.bot ? t.a + (rnd()*2-1)*L.err : t.a, sp = (t.bot ? BS*L.bs : BS) * SPD();
+  const L = LEVELS[t.lv ?? lvl], a = t.bot ? t.a + (rnd()*2-1)*L.err : t.a, sp = (t.bot ? BS*L.bs : BS) * SPD();
   const bx = t.x + Math.cos(a)*34, by = t.y + Math.sin(a)*34;
   const mine = t === me, on = k => mine ? fxOn(k) : t.bot && bOn(t,k), pr = on('pierce') ? 1 : 0;
   t.cool = t.bot ? (L.cd[0] + rnd()*(L.cd[1]-L.cd[0])) / (on('rapid') ? 2.5 : 1) : fxOn('rapid') ? .12 : .35;
@@ -605,8 +613,8 @@ function updateMe(dt,now){
   if ((keys.has('f') || fireHeld || fxOn('trig')) && me.cool <= 0 && me.bullets.length < (fxOn('rapid') ? 6 : 3)) shoot(me);
 }
 function updateBot(b,dt,now){
-  if (!b.alive){ if (now >= b.respawnAt) respawn(b); return; }
-  const L = LEVELS[lvl];
+  if (!b.alive){ if (mode !== 'waves' && now >= b.respawnAt) respawn(b); return; }
+  const L = LEVELS[b.lv ?? lvl];
   b.cool -= dt; b.inv -= dt;
   let tg = null, dist = 1e9, up = null, upD = 1e9;
   const hi = (b.z || 0) >= ELZ, rng = fogOn() ? Math.min(L.range, FOGR) : L.range;
@@ -630,7 +638,7 @@ function updateBot(b,dt,now){
     b.seen = 0;
     const da = angDiff(climbTo.direct ? Math.atan2(climbTo.y-b.y, climbTo.x-b.x) : steer(b,climbTo.x,climbTo.y,now), b.a);
     turn = clamp(da*2.5,-1,1); thr = Math.abs(da) < .9 ? .75 : .1;
-  } else if (mode === 'ctf' || nearBubble(b,now)){
+  } else if (mode !== 'ffa' || nearBubble(b,now)){
     b.seen = 0;
     const g = (mode === 'ctf' && carrying(b)) ? botGoal(b,now) : (nearBubble(b,now) || botGoal(b,now)), d = Math.hypot(g.x-b.x, g.y-b.y);
     if (d < g.stop){ thr = 0; turn = 0; if (g.patrol) b.goal = null; }
@@ -682,6 +690,12 @@ function nearBubble(b,now){
   return b.nb;
 }
 function botGoal(b,now){
+  if (mode === 'koth' && hill) return patrolNear(b, hill.x, hill.y, hill.r*.6, now);
+  if (mode === 'rabbit' || mode === 'waves'){
+    let best = null, bd = 1e9;
+    for (const o of tgts){ if (o.ref === b || !foe(b.tm, o.tm)) continue; const ox = o.ref ? o.ref.x : o.x, oy = o.ref ? o.ref.y : o.y, d = Math.hypot(ox-b.x, oy-b.y); if (d < bd){ bd = d; best = { x:ox, y:oy }; } }
+    if (best) return patrolNear(b, best.x, best.y, 120, now);
+  }
   if (mode !== 'ctf') return patrolNear(b, b.x, b.y, 400, now);
   const own = flags[b.tm], want = flags[1-b.tm], ownBase = BASES[b.tm], foeBase = BASES[1-b.tm];
   if (carrying(b)) return { x:ownBase.x, y:ownBase.y, stop:20 };
@@ -722,6 +736,7 @@ function adjustBots(){
   isHost = remotes.size === 0 || (me.playing && hk === myKey());
   if (!isHost){ if (bots.length) bots = []; return; }
   if (rbots.size){ if (!bots.length && lastBt && performance.now() - lastBt.at < 5000) bots = lastBt.list.map(e => newBot(e)); rbots.clear(); lastBt = null; }
+  if (mode === 'waves') return;   // the waves bring their own bots
   const humans = (me.playing ? 1 : 0) + remotes.size, need = Math.max(0, MINT[sz] - humans);
   while (bots.length > need){
     if (mode === 'ctf'){ const c = teamCounts(), big = c[0] > c[1] ? 0 : 1, i = bots.map(b => b.tm).lastIndexOf(big); bots.splice(i >= 0 ? i : bots.length-1, 1); }
@@ -777,11 +792,11 @@ function hits(now){
     const spc = (b.f || 0) & (LASER|SHOCK);
     for (const t of bots) if (t.alive && t.inv <= 0 && foe(team,t.tm) && !((t.z || 0) >= ELZ && !(b.z >= ELZ) && !b.pr) && shotHits(b, t.x, t.y, R+5)){
       if (botShield(t)){ hit = true; break; }
-      me.bk[t.key] = (me.bk[t.key] || 0) + 1; die(t,now); addFeed(me.name+' → '+t.name); hit = !spc; if (!spc) break; }
+      me.bk[t.key] = (me.bk[t.key] || 0) + 1; die(t,now); addFeed(me.name+' → '+t.name); onKill(t.key, myHolderKey()); hit = !spc; if (!spc) break; }
     if (!hit) for (const t of rbots.values()) if (t.alive && !t.iv && !(t.hitUntil > now) && foe(team,t.tm) && !(t.el && !(b.z >= ELZ) && !b.pr) && shotHits(b, t.rx, t.ry, R+5)){
       t.hitUntil = now + 1500; puff(t.rx,t.ry); hit = !spc;
       if ((t.fx || '').includes('s')){ me.bs[t.key] = (me.bs[t.key] || 0) + 1; sfx('bloop', t.rx, t.ry); boomSoft(t.rx, t.ry, '#8fd3ff'); }
-      else { me.bk[t.key] = (me.bk[t.key] || 0) + 1; addFeed(me.name+' → '+t.name); }
+      else { me.bk[t.key] = (me.bk[t.key] || 0) + 1; addFeed(me.name+' → '+t.name); onKill(t.key, myHolderKey()); }
       sendNow(); if (!spc) break; }
     if (!hit) for (const r of remotes.values()) if (r.alive && !r.iv && foe(team,r.tm) && !(r.el && !(b.z >= ELZ) && !b.pr) && shotHits(b, r.rx, r.ry, R+3)){ if (spc) continue; puff(b.x,b.y); b.dead = now + 150; break; }
     if (hit) me.bullets.splice(i,1);
@@ -790,26 +805,26 @@ function hits(now){
     if (b.dead){ if (now > b.dead) s.bullets.splice(i,1); continue; }
     let gone = false;
     for (const t of bots) if (t !== s && t.alive && t.inv <= 0 && foe(s.tm,t.tm) && !((t.z || 0) >= ELZ && !(b.z >= ELZ) && !b.pr) && (b.x-t.x)**2 + (b.y-t.y)**2 < (R+4)**2){
-      s.bullets.splice(i,1); gone = true; if (botShield(t)) break; die(t,now); t.dd++; s.kk++; addFeed(s.name+' → '+t.name); gone = true; break; }
+      s.bullets.splice(i,1); gone = true; if (botShield(t)) break; die(t,now); t.dd++; s.kk++; addFeed(s.name+' → '+t.name); onKill(t.key, s.key); gone = true; break; }
     if (!gone) for (const r of remotes.values()) if (r.alive && !r.iv && !(r.el && !(b.z >= ELZ) && !b.pr) && foe(s.tm,r.tm) && (b.x-r.rx)**2 + (b.y-r.ry)**2 < (R+3)**2){ b.dead = now + 150; puff(b.x,b.y); break; } }
   if (!me.playing || !me.alive || me.inv > 0) return;
   for (const t of bots) if (foe(t.tm,team)) for (let i = t.bullets.length-1; i >= 0; i--){ const b = t.bullets[i];
     if (b.dead || (me.z >= ELZ && !(b.z >= ELZ) && !b.pr)) continue;
     if ((b.x-me.x)**2 + (b.y-me.y)**2 >= (R+4)**2) continue;
     t.bullets.splice(i,1); if (useShield()) continue;
-    me.kb[t.key] = (me.kb[t.key] || 0) + 1; die(me,now); me.killer = t.name; addFeed(t.name+' → '+me.name); sendNow(); return; }
+    me.kb[t.key] = (me.kb[t.key] || 0) + 1; die(me,now); me.killer = t.name; addFeed(t.name+' → '+me.name); onKill(myHolderKey(), t.key); sendNow(); return; }
   for (const t of rbots.values()) if (foe(t.tm,team)) for (const b of t.bc){
     if (me.z >= ELZ && !(b.f & 1)) continue;
     const key = t.key + ':' + b.id;
     if ((b.x-me.x)**2 + (b.y-me.y)**2 >= (R+4)**2 || ign.get(key) > now) continue;
     if (useShield()){ ign.set(key, now + 2500); continue; }
-    ign.set(key, now + 2500); me.kb[t.key] = (me.kb[t.key] || 0) + 1; die(me,now); me.killer = t.name; addFeed(t.name+' → '+me.name); sendNow(); return; }
+    ign.set(key, now + 2500); me.kb[t.key] = (me.kb[t.key] || 0) + 1; die(me,now); me.killer = t.name; addFeed(t.name+' → '+me.name); onKill(myHolderKey(), t.key); sendNow(); return; }
   for (const r of remotes.values()) if (foe(r.tm,team)) for (const b of r.bc){
     if (me.z >= ELZ && !(b.f & 5)) continue;
     const key = r.key + ':' + b.id;
     if (!shotHits(b, me.x, me.y, R+3) || ign.get(key) > now) continue;
     if (useShield()){ ign.set(key, now + 2500); continue; }
-    me.kb[r.key] = (me.kb[r.key] || 0) + 1; die(me,now); me.killer = r.name; addFeed(r.name+' → '+me.name); sendNow(); return; }
+    me.kb[r.key] = (me.kb[r.key] || 0) + 1; die(me,now); me.killer = r.name; addFeed(r.name+' → '+me.name); onKill(myHolderKey(), r.key); sendNow(); return; }
 }
 function botShield(t){
   if (!bOn(t,'shield')) return false;
@@ -962,7 +977,7 @@ function lobbyArenas(){
   const m = new Map();
   for (const p of ps){
     const pr = p.presence; if (!pr || pr.v !== 2 || typeof pr.a !== 'string' || !/^[a-z0-9]{4,12}$/.test(pr.a)) continue;
-    const e = m.get(pr.a) || { code:pr.a, n:0, pl:0, md:pr.md === 'ctf' ? 'ctf' : 'ffa', sz:SIZES[pr.sz] ? pr.sz : 'S', vw:pr.vw === 'fog' ? 'fog' : '2d' };
+    const e = m.get(pr.a) || { code:pr.a, n:0, pl:0, md:pmd(pr.md), sz:SIZES[pr.sz] ? pr.sz : 'S', vw:pr.vw === 'fog' ? 'fog' : '2d' };
     e.n++; if (pr.pl === 1) e.pl++; m.set(pr.a, e);
   }
   return [...m.values()];
@@ -984,7 +999,7 @@ function renderArenas(){
   box.replaceChildren(...l.map(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'arow' + (e.code === arenaCode ? ' here' : '');
     const c = document.createElement('b'); c.textContent = e.code.toUpperCase();
-    const t = document.createElement('span'); t.textContent = (e.md === 'ctf' ? 'Bandiera' : 'Tutti contro tutti') + ' · ' + e.sz + (e.vw === 'fog' ? ' · nebbia' : '') + ' · ' + e.pl + (e.pl === 1 ? ' in gioco' : ' in gioco') + (e.code === arenaCode ? ' · sei qui' : '');
+    const t = document.createElement('span'); t.textContent = MODESHORT[e.md] + ' · ' + e.sz + (e.vw === 'fog' ? ' · nebbia' : '') + ' · ' + e.pl + (e.pl === 1 ? ' in gioco' : ' in gioco') + (e.code === arenaCode ? ' · sei qui' : '');
     b.append(c, t); b.addEventListener('click', () => joinArena(e.code)); return b;
   }));
 }
@@ -1017,16 +1032,18 @@ function netRead(){
     r.pu = Array.isArray(pr.pu) ? pr.pu.slice(0,64).map(v => Math.round(num(v,0,1e6,0))) : null;
     r.seed = Math.floor(num(pr.m,0,0x7fffffff,0)); r.ep = Math.floor(num(pr.me,0,1e6,0));
     r.el = pr.el === 1; r.z = num(pr.z,0,120,r.el ? PH : 0);
-    r.md = pr.md === 'ctf' ? 'ctf' : 'ffa'; r.tm = pr.tm === 1 ? 1 : 0; r.bo = [3,5,11].includes(pr.bo) ? pr.bo : 3; r.sz = SIZES[pr.sz] ? pr.sz : 'S';
+    r.md = pmd(pr.md); r.tm = pr.tm === 1 ? 1 : 0; r.bo = [3,5,11].includes(pr.bo) ? pr.bo : 3; r.sz = SIZES[pr.sz] ? pr.sz : 'S';
     r.fl = r.md === 'ctf' && Array.isArray(pr.fl) ? [parseFlag(pr.fl[0],0), parseFlag(pr.fl[1],1)] : null;
     r.sc = Array.isArray(pr.sc) ? [Math.round(num(pr.sc[0],0,999,0)), Math.round(num(pr.sc[1],0,999,0))] : null;
+    r.kh = num(pr.kh,0,1e6,0)/10; r.wv = Number.isInteger(pr.wv) ? clamp(pr.wv,0,999) : null;
+    r.rb = Array.isArray(pr.rb) && pr.rb.length === 2 && typeof pr.rb[1] === 'string' ? { v:Math.round(num(pr.rb[0],0,1e6,0)), k:pr.rb[1].slice(0,48) } : null;
     r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d';
     r.hs = Number.isInteger(pr.hs) && pr.hs >= 0 && pr.hs < 64 ? pr.hs : -1; r.bh = Array.isArray(pr.bh) ? pr.bh.slice(0,16).filter(x => Number.isInteger(x) && x >= 0 && x < 64) : null;
     const kb = readMap(pr.kb), bk = readMap(pr.bk);
     if (!fresh){
       for (const k in kb) if (kb[k] > (r.kb[k] || 0)) addFeed(nameOf(k) + ' → ' + r.name);
       for (const k in bk) if (bk[k] > (r.bk[k] || 0)){
-        addFeed(r.name + ' → ' + nameOf(k));
+        addFeed(r.name + ' → ' + nameOf(k)); onKill(k, r.key);
         const t = bots.find(b => b.key === k); if (t && t.alive) die(t, performance.now());
       }
     }
@@ -1054,7 +1071,7 @@ function readMap(o){
   return out;
 }
 function nameOf(k){
-  if (k === myKey()) return me.name;
+  if (k === myKey() || k === 'pme') return me.name;
   const r = remotes.get(k) || rbots.get(k) || bots.find(b => b.key === k);
   return r ? r.name : 'Qualcuno';
 }
@@ -1075,7 +1092,7 @@ function readHostBots(){
     if (!t){ t = { key:d.key, rx:d.x, ry:d.y, ra:d.a, tread:0, bul:[], bc:[], alive:d.al }; rbots.set(d.key, t); }
     if (t.alive && !d.al){ boom(t.rx,t.ry,d.hue); ghosts.push({ x:t.rx, y:t.ry, t:0 }); }
     if (!t.alive && d.al) t.hitUntil = 0;
-    Object.assign(t, { name:'Bot ' + BOTN[ni], ni, hue:d.hue, tm:d.tm, x:d.x, y:d.y, a:d.a, alive:d.al, iv:d.iv, kk:d.kk, dd:d.dd, at:h.at, bul:[], fx:typeof e[12] === 'string' ? e[12].replace(/[^sgt]/g,'').slice(0,3) : '', el:e[13] === 1, z:e[13] === 1 ? PH : 0 });
+    Object.assign(t, { name:'Bot ' + BOTN[ni], ni, hue:d.hue, tm:d.tm, x:d.x, y:d.y, a:d.a, alive:d.al, iv:d.iv, kk:d.kk, dd:d.dd, at:h.at, bul:[], fx:typeof e[12] === 'string' ? e[12].replace(/[^sgt]/g,'').slice(0,3) : '', el:e[13] === 1, z:e[13] === 1 ? PH : 0, kh:num(e[14],0,1e6,0)/10 });
   });
   for (const k of [...rbots.keys()]) if (!seen.has(k)) rbots.delete(k);
   const keys = list.map(d => d.key);
@@ -1094,11 +1111,54 @@ function loadMap(seed, ep, msg, md, b, size, f, mst, v){
   pads = m.pads; slots = m.slots; puGen = slots.map(() => 0); puAt = slots.map(() => -1e9); me.fx = {}; me.hs = -1; heldPrev = new Set(); heldNow = new Set(); ign.clear();
   flags = [homeFlag(0), homeFlag(1)]; score = [0,0];
   if (mode === 'ctf' && prev !== 'ctf') team = resolveTeam();
+  else if (mode !== 'ctf') team = 0;
+  hill = pickHill(); rab = { v:0, k:'' }; wave = 0; waveAt = 0; me.kh = 0;
   parts = []; ghosts = []; me.bullets = [];
   if (me.playing && me.alive) respawn(me);
   bots = []; rbots.clear(); lastBt = null; hostSrc = null;
   if (msg) addFeed(msg);
   syncUI(); sendNow();
+}
+/* the hill: one yellow platform chosen by the seed (or the middle of the arena), 130 around its centre */
+function pickHill(){
+  const pl = walls.filter(isPlat);
+  if (!pl.length) return { x:W/2, y:H/2, r:130 };
+  const w = pl[Math.floor(prng((mapSeed*7 + 3) | 0)()*pl.length)];
+  return { x:w[0] + w[2]/2, y:w[1] + w[3]/2, r:130 };
+}
+function onKill(victim, killer){ if (mode === 'rabbit' && victim && victim === rab.k && killer && killer !== victim) setRab(killer); }
+function setRab(k){ rab = { v:rab.v + 1, k }; rabNews(); sendNow(); }
+function rabNews(){
+  if (rab.k === myHolderKey()){ addFeed('Sei il coniglio! Tutti ti danno la caccia'); pops.push({ x:me.x, y:me.y-50, text:'coniglio!', t:0 }); sfx('goal'); }
+  else addFeed(nameOf(rab.k) + ' è il coniglio');
+}
+function participants(){ const k = []; if (me.playing) k.push(myHolderKey()); for (const r of remotes.values()) k.push(r.key); for (const b of bots) k.push(b.key); return k; }
+function modeStep(now, dt){
+  if (mode === 'koth' && hill && !overAt){
+    const inH = (x,y) => Math.hypot(x - hill.x, y - hill.y) < hill.r, occ = [];
+    if (me.playing && me.alive && inH(me.x,me.y)) occ.push(me);
+    for (const b of bots) if (b.alive && inH(b.x,b.y)) occ.push(b);
+    for (const t of rbots.values()) if (t.alive && inH(t.rx,t.ry)) occ.push(t);
+    for (const r of remotes.values()) if (r.alive && inH(r.rx,r.ry)) occ.push(r);
+    hill.king = occ.length === 1 ? occ[0] : null; hill.busy = occ.length > 1;
+    if (occ.length === 1){ const o = occ[0]; if (o === me) me.kh = (me.kh || 0) + dt; else if (o.bot && isHost) o.kh = (o.kh || 0) + dt; }
+  }
+  if (mode === 'rabbit'){
+    for (const r of remotes.values()) if (r.rb && (r.rb.v > rab.v || (r.rb.v === rab.v && r.rb.k > rab.k))){ const was = rab.k; rab = { v:r.rb.v, k:r.rb.k }; if (rab.k !== was) rabNews(); }
+    if (isHost && !overAt){ const ks = participants(); if (ks.length > 1 && !ks.includes(rab.k)) setRab(ks[Math.floor(rnd()*ks.length)]); }
+    team = rab.k === myHolderKey() ? 1 : 0;
+    if (isHost) for (const b of bots) b.tm = rab.k === b.key ? 1 : 0;
+  }
+  if (mode === 'waves'){
+    if (!isHost){ const h = remotes.get(hostKey()); if (h && h.wv != null) wave = h.wv; return; }
+    if (overAt) return;
+    if (!waveAt && !bots.some(b => b.alive)) waveAt = now + (wave ? 3500 : 1500);
+    if (waveAt && now >= waveAt){
+      wave++; waveAt = 0; const n = Math.min(12, 1 + wave + (me.playing ? 1 : 0) + remotes.size);
+      bots = []; for (let i = 0; i < n; i++){ const b = newBot(); b.tm = 1; b.lv = Math.min(2, Math.floor((wave - 1)/2)); bots.push(b); }
+      addFeed('Ondata ' + wave + ': ' + n + ' bot!'); sfx('goal'); sendNow();
+    }
+  }
 }
 function rollMap(msg){ loadMap(newSeed(), Math.max(1,mapEp) + 1, msg || (me.playing ? me.name : 'Qualcuno') + ' ha generato una nuova mappa'); }
 function setSz(v){
@@ -1124,7 +1184,7 @@ function setVw(v){
 function setMode(md){
   if (md === mode) return syncUI();
   store.set('kw.mode', md);
-  loadMap(mapSeed, Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto: ' + (md === 'ctf' ? 'cattura la bandiera' : 'tutti contro tutti'), md);
+  loadMap(mapSeed, Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto: ' + MODES[md].toLowerCase(), md);
 }
 function resolveTeam(){
   if (teamPref !== 'auto') return +teamPref;
@@ -1147,6 +1207,7 @@ function setTeamPref(v){
 const fkey = f => f.s + ',' + f.x + ',' + f.y + ',' + f.h;
 const better = (a,b) => a.v > b.v || (a.v === b.v && fkey(a) < fkey(b));
 const myHolderKey = () => myKey() || 'pme';
+const isRab = tm => mode === 'rabbit' && tm === 1;
 function parseFlag(a,i){
   if (!Array.isArray(a) || a.length !== 5) return null;
   const s = Math.round(num(a[1],0,2,0)), h = typeof a[4] === 'string' && /^[pb][A-Za-z0-9_-]{0,40}$/.test(a[4]) ? a[4] : '';
@@ -1226,10 +1287,11 @@ function flagStep(now){
 /* ---------- end of match: CTF best-of, FFA first to 10 or timer ---------- */
 function standings(){
   const list = [], mk = myKey(), sv = o => { let n = 0; for (const k in o) n += o[k]; return n; };
-  if (me.playing) list.push({ n:me.name, h:th(me.hue,team), tm:team, k:kills(mk) + sv(me.bk), d:sv(me.kb), me:true });
-  for (const r of remotes.values()) list.push({ n:r.name + (r.guest ? ' (ospite)' : ''), h:th(r.hue,r.tm), tm:r.tm, k:kills(r.key) + sv(r.bk), d:sv(r.kb) });
-  for (const t of bots) list.push({ n:t.name, h:th(t.hue,t.tm), tm:t.tm, k:kills(t.key) + t.kk, d:botDeaths(t.key) + t.dd });
-  for (const t of rbots.values()) list.push({ n:t.name, h:th(t.hue,t.tm), tm:t.tm, k:kills(t.key) + t.kk, d:botDeaths(t.key) + t.dd });
+  const kh = mode === 'koth', rn = (n,tm) => isRab(tm) ? '🐰 ' + n : n;
+  if (me.playing) list.push({ n:rn(me.name,team), h:th(me.hue,team), tm:team, k:kh ? Math.floor(me.kh || 0) : kills(mk) + sv(me.bk), d:sv(me.kb), me:true, hu:1 });
+  for (const r of remotes.values()) list.push({ n:rn(r.name + (r.guest ? ' (ospite)' : ''), r.tm), h:th(r.hue,r.tm), tm:r.tm, k:kh ? Math.floor(r.kh || 0) : kills(r.key) + sv(r.bk), d:sv(r.kb), hu:1 });
+  for (const t of bots) list.push({ n:rn(t.name,t.tm), h:th(t.hue,t.tm), tm:t.tm, k:kh ? Math.floor(t.kh || 0) : kills(t.key) + t.kk, d:botDeaths(t.key) + t.dd });
+  for (const t of rbots.values()) list.push({ n:rn(t.name,t.tm), h:th(t.hue,t.tm), tm:t.tm, k:kh ? Math.floor(t.kh || 0) : kills(t.key) + t.kk, d:botDeaths(t.key) + t.dd });
   return list;
 }
 const timeLeft = () => FE[fe].ms ? FE[fe].ms - (Date.now() - ms) : Infinity;
@@ -1239,11 +1301,15 @@ function matchResult(){
     return { t:'Vince la squadra ' + TEAMS[w].n + '!', s:score[w] + ' a ' + score[1-w] + ', al meglio di ' + bo, w, mine:w === team };
   }
   const st = standings(); if (!st.length) return null;
-  st.sort((a,b) => b.k - a.k); const top = st[0];
-  if (fe === 'k10') return top.k >= 10 ? { t:'Vince ' + top.n + '!', s:'Primo a 10 colpi', mine:!!top.me } : null;
+  if (mode === 'waves'){
+    const dead = st.filter(p => p.hu).reduce((n,p) => n + p.d, 0);
+    return wave > 0 && dead >= livesMax() ? { t:'Fine all\'ondata ' + wave + '!', s:'Vite finite: avete resistito fino all\'ondata ' + wave } : null;
+  }
+  st.sort((a,b) => b.k - a.k); const top = st[0], goal = mode === 'koth' ? KOTH_WIN : 10, unit = mode === 'koth' ? ' secondi in cima' : mode === 'rabbit' ? ' punti' : ' colpi';
+  if (fe === 'k10') return top.k >= goal ? { t:'Vince ' + top.n + '!', s:'Primo a ' + goal + unit, mine:!!top.me } : null;
   if (timeLeft() > 0) return null;
-  if (st.length > 1 && st[1].k === top.k) return { t:'Pareggio!', s:'Tempo scaduto: ' + top.k + ' colpi a testa in vetta' };
-  return { t:'Vince ' + top.n + '!', s:'Tempo scaduto, ' + top.k + ' colpi', mine:!!top.me };
+  if (st.length > 1 && st[1].k === top.k) return { t:'Pareggio!', s:'Tempo scaduto: ' + top.k + unit + ' a testa in vetta' };
+  return { t:'Vince ' + top.n + '!', s:'Tempo scaduto, ' + top.k + unit, mine:!!top.me };
 }
 function matchStep(now){
   const res = matchResult();
@@ -1314,8 +1380,8 @@ function netSmooth(dt){
 }
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
-    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
-    bt:isHost && remotes.size ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0]) : null,
+    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
+    bt:isHost && remotes.size ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
     bb:isHost && remotes.size ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
     fl:mode === 'ctf' ? flags.map(f => [f.v, f.s, r1(f.x), r1(f.y), f.h]) : null, sc:mode === 'ctf' ? score : null };
@@ -1360,6 +1426,8 @@ function tank(x,y,a,hue,name,o,now){
   ctx.fillStyle = c[0]; ctx.strokeStyle = c[1]; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.6)'; ell(-5,-6,3.5,2.5);
   face(now,o.seed,false);
+  if (o.rb){ for (const s of [-1,1]){ ctx.fillStyle = '#fff6fb'; ctx.strokeStyle = '#ff8fc8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(s*6, -22, 4.5, 11, s*.25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffc2d4'; ctx.beginPath(); ctx.ellipse(s*6, -22, 2, 7, s*.25, 0, Math.PI*2); ctx.fill(); } }
   ctx.font = '600 13px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const tw = ctx.measureText(name).width, tm = o.tm === 0 || o.tm === 1 ? o.tm : -1;
   if (gh && !o.me){ ctx.restore(); return; }
@@ -1443,6 +1511,7 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     const xx = x + ((y/60)%2 ? 30 : 0), p = P(xx,y,0); if (!p || p.x < -10 || p.x > cw+10 || p.y < -10 || p.y > ch+10) continue;
     ell(p.x, p.y, 5*p.k, 5*p.k*se); }
   if (mode === 'ctf') for (let i = 0; i < 2; i++) ground(BASES[i].x, BASES[i].y, () => basePad(i));
+  if (mode === 'koth' && hill) ground(hill.x, hill.y, () => hillDraw(now));
   pads.forEach((pr,k) => pr.forEach(p => ground(p.x, p.y, () => padDraw(p,now,k))));
   const items = [];
   for (const w of walls){ const ds = [dep(w[0],w[1]), dep(w[0]+w[2],w[1]), dep(w[0],w[1]+w[3]), dep(w[0]+w[2],w[1]+w[3])];
@@ -1456,11 +1525,11 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     if (em) speech(0, -14*v, em.t, em.age);
     for (let i = 0; i < 2; i++) if (mode === 'ctf' && flags[i].s === 1 && Math.hypot(flagPos(i).x-x, flagPos(i).y-y) < 2) flagIcon(16, -4-14*v, i, now, .75);
     ctx.restore(); } }); };
-  for (const t of bots) if (t.alive) tk(t.x,t.y,t.z || 0,t.a,th(t.hue,t.tm),t.name,{ fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, inv:t.inv > 0, tread:t.tread, seed:t.seed }, null, t.tm);
-  for (const t of rbots.values()) if (t.alive) tk(t.rx,t.ry,t.el ? PH : 0,t.ra,th(t.hue,t.tm),t.name,{ fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, inv:t.iv, tread:t.tread, seed:t.ni*1.3 }, null, t.tm);
-  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.z || 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
+  for (const t of bots) if (t.alive) tk(t.x,t.y,t.z || 0,t.a,th(t.hue,t.tm),t.name,{ fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed }, null, t.tm);
+  for (const t of rbots.values()) if (t.alive) tk(t.rx,t.ry,t.el ? PH : 0,t.ra,th(t.hue,t.tm),t.name,{ fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 }, null, t.tm);
+  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.z || 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
     r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g') ? { t:EMO[r.emI], age:(pn - r.emAt)/1000 } : null, r.tm);
-  if (me.playing && me.alive) tk(me.x,me.y,me.z || 0,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:mode === 'ctf' ? team : -1, me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },
+  if (me.playing && me.alive) tk(me.x,me.y,me.z || 0,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:mode === 'ctf' ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },
     me.emAt && pn - me.emAt < 2500 ? { t:EMO[me.em], age:(pn - me.emAt)/1000 } : null, team);
   const bl = (b,z,mine) => { if (!mine && !seen(b.x,b.y,-2)) return; const f = b.f || 0;
     if (f & SHOCK) return ground(b.x, b.y, () => bullet(b,now));
@@ -1519,6 +1588,13 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     if (poly([Q(x0,y0,h),Q(x1,y0,h),Q(x1,y1,h),Q(x0,y1,h)])){ ctx.fillStyle = c[0]; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5; ctx.stroke(); }
     if (w[4] === 1 && w[2] >= 60 && (Cw.y > y1 || Cw.y < y0)){ const f = P((x0+x1)/2, Cw.y > y1 ? y1 : y0, h*.5); if (f){ ctx.save(); ctx.translate(f.x,f.y); ctx.scale(f.k*1.3, f.k*1.3); face(0,9,false); ctx.restore(); } }
   }
+}
+function hillDraw(now){
+  const h = hill, k = h.king, c = k ? (k === me ? '#ff8fc8' : '#ffd84a') : h.busy ? '#ff9a62' : '#ffe58a';
+  ctx.fillStyle = 'rgba(255,229,138,.28)'; ell(h.x, h.y, h.r, h.r);
+  ctx.strokeStyle = c; ctx.lineWidth = 5; ctx.setLineDash([14,10]); ctx.lineDashOffset = -now/50; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#dcb02c'; ctx.beginPath(); const y = h.y + h.r - 26;
+  ctx.moveTo(h.x-16, y+8); ctx.lineTo(h.x-16, y-6); ctx.lineTo(h.x-8, y+1); ctx.lineTo(h.x, y-10); ctx.lineTo(h.x+8, y+1); ctx.lineTo(h.x+16, y-6); ctx.lineTo(h.x+16, y+8); ctx.closePath(); ctx.fill();
 }
 function basePad(i){
   const b = BASES[i], c = HUES[TEAMS[i].h];
@@ -1600,19 +1676,20 @@ function draw(now){
   const x0 = Math.max(30, Math.floor((camx-vw/2)/60)*60+30), y0 = Math.max(30, Math.floor((camy-vh/2)/60)*60+30);
   for (let y = y0; y < Math.min(H, camy+vh/2+60); y += 60) for (let x = x0; x < Math.min(W, camx+vw/2+60); x += 60) ell(x + ((y/60)%2 ? 30 : 0), y, 5, 5);
   if (mode === 'ctf'){ basePad(0); basePad(1); }
+  if (mode === 'koth' && hill) hillDraw(now);
   pads.forEach((pr,k) => pr.forEach(p => padDraw(p,now,k)));
   walls.forEach(block);
   for (let s = 0; s < slots.length; s++) bubble(s,now);
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s !== 1) flagIcon(flags[i].x, flags[i].y, i, now, 1);
   ghosts.forEach(g => ghost(g,now));
   me.bullets.forEach(b => bullet(b,now)); bots.forEach(t => t.bullets.forEach(b => bullet(b,now))); rbots.forEach(t => t.bc.forEach(b => bullet(b,now))); remotes.forEach(r => r.bc.forEach(b => bullet(b,now)));
-  for (const t of bots) if (t.alive) tank(t.x,t.y,t.a,th(t.hue,t.tm),t.name,{ el:(t.z || 0) >= ELZ, fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, inv:t.inv > 0, tread:t.tread, seed:t.seed },now);
-  for (const t of rbots.values()) if (t.alive) tank(t.rx,t.ry,t.ra,th(t.hue,t.tm),t.name,{ el:t.el, fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, inv:t.iv, tread:t.tread, seed:t.ni*1.3 },now);
-  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:(r.z || 0)/PH, fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
+  for (const t of bots) if (t.alive) tank(t.x,t.y,t.a,th(t.hue,t.tm),t.name,{ el:(t.z || 0) >= ELZ, fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed },now);
+  for (const t of rbots.values()) if (t.alive) tank(t.rx,t.ry,t.ra,th(t.hue,t.tm),t.name,{ el:t.el, fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 },now);
+  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:(r.z || 0)/PH, fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
   const pn = performance.now();
   for (const r of remotes.values()) if (r.alive && r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g')) speech(r.rx, r.ry, EMO[r.emI], (pn - r.emAt)/1000);
   if (me.playing && me.alive && me.emAt && pn - me.emAt < 2500) speech(me.x, me.y, EMO[me.em], (pn - me.emAt)/1000);
-  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ el:(me.z || 0)/PH, fx:fxStr(), tm:mode === 'ctf' ? team : -1, me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
+  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ el:(me.z || 0)/PH, fx:fxStr(), tm:mode === 'ctf' ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s === 1){ const p = flagPos(i); flagIcon(p.x+16, p.y-4, i, now, .75); }
   for (const p of parts){ ctx.globalAlpha = Math.max(0,p.life/p.max); ctx.fillStyle = p.c;
     if (p.sh === 0) heart(p.x,p.y,p.r); else if (p.sh === 1){ star(p.x,p.y,p.r*1.3,p.rot); ctx.fill(); } else ell(p.x,p.y,p.r,p.r); }
@@ -1641,6 +1718,7 @@ function minimap(ox, oy, mw){
   for (const w of walls) ctx.fillRect(X+w[0]*ms, Y+w[1]*ms, Math.max(2,w[2]*ms), Math.max(2,w[3]*ms));
   const dot = (x,y,c,r) => { ctx.fillStyle = c; ell(X+x*ms, Y+y*ms, r, r); };
   if (mode === 'ctf') for (let i = 0; i < 2; i++){ const c = HUES[TEAMS[i].h]; ctx.globalAlpha = .6; dot(BASES[i].x,BASES[i].y,c[0],64*ms+1); ctx.globalAlpha = 1; }
+  if (mode === 'koth' && hill){ ctx.globalAlpha = .7; dot(hill.x, hill.y, '#ffd84a', hill.r*ms); ctx.globalAlpha = 1; }
   const mark = (x,y,hue,tm) => { if (!inSight(x,y,tm)) return; if (mode === 'ctf'){ ctx.fillStyle = HUES[TEAMS[tm].h][1]; emblem(tm, X+x*ms, Y+y*ms, 4.5); } else dot(x,y,HUES[hue][1],3); };
   for (const t of bots) if (t.alive && !bOn(t,'ghost')) mark(t.x,t.y,t.hue,t.tm);
   for (const t of rbots.values()) if (t.alive && !(t.fx || '').includes('g')) mark(t.rx,t.ry,t.hue,t.tm);
@@ -1697,8 +1775,13 @@ function hud(now){
   $('win').hidden = !res;
   if (res){ $('wint').textContent = res.t; $('wins').textContent = res.s + '. Nuova partita tra ' + Math.max(0, Math.ceil((10000 - (now - overAt))/1000)) + ' s.'; }
   $('clk').hidden = ctf;
-  if (!ctf){ const tl = timeLeft(); $('clk').textContent = tl === Infinity ? 'Primo a 10 colpi' : 'Tempo ' + Math.floor(Math.max(0,tl)/60000) + ':' + String(Math.floor(Math.max(0,tl)/1000) % 60).padStart(2,'0'); }
-  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', ctf ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, ctf ? p.tm : -1)));
+  if (!ctf){ const tl = timeLeft(), tt = tl === Infinity ? '' : 'Tempo ' + Math.floor(Math.max(0,tl)/60000) + ':' + String(Math.floor(Math.max(0,tl)/1000) % 60).padStart(2,'0');
+    let t = tt || 'Primo a 10 colpi';
+    if (mode === 'koth'){ const k = hill && hill.king; t = (tt || 'Primo a ' + KOTH_WIN + ' s') + ' · collina: ' + (k ? (k === me ? 'tua! ' + Math.floor(me.kh || 0) + ' s' : k.name) : hill && hill.busy ? 'contesa' : 'libera'); }
+    if (mode === 'rabbit') t = (tt || 'Primo a 10 punti') + ' · ' + (rab.k ? (rab.k === myHolderKey() ? 'sei il coniglio!' : 'coniglio: ' + nameOf(rab.k)) : 'si sceglie il coniglio…');
+    if (mode === 'waves'){ const dead = list.filter(p => p.hu).reduce((n,p) => n + p.d, 0); t = 'Ondata ' + wave + ' · vite ' + Math.max(0, livesMax() - dead) + ' · bot ' + (bots.length ? bots.filter(b => b.alive).length : [...rbots.values()].filter(b => b.alive).length); }
+    $('clk').textContent = t; }
+  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', ctf ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, ctf ? p.tm : -1)));
   const n = remotes.size + (me.playing ? 1 : 0);
   $('pill').classList.toggle('on', net === 'on');
   $('lvw').hidden = !(isHost && bots.length);
@@ -1729,7 +1812,7 @@ function frame(t){
     if (want && prev === 0 && !fogOn()) sfx('tele'); const cc = canClimb(); if (me.ccPrev && !cc && me.z > 0 && !me.vz){ me.z = 0; pushOut(me,R,false); } me.ccPrev = cc;
     const ty = fogOn() && me.playing ? me.a : -Math.PI/2; camYaw += angDiff(ty, camYaw) * Math.min(1, dt*5); }
   stepBullets(me.bullets,dt); bots.forEach(b => stepBullets(b.bullets,dt));
-  hits(t); flagStep(t); powerStep(t); matchStep(t);
+  hits(t); flagStep(t); powerStep(t); modeStep(t, dt); matchStep(t);
   if (ign.size > 50) for (const [k,v] of ign) if (v < t) ign.delete(k);
   for (let i = parts.length-1; i >= 0; i--){ const p = parts[i]; p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= .92; p.vy *= .92; p.rot += dt*4; if ((p.life -= dt) <= 0) parts.splice(i,1); }
   pops = pops.filter(p => (p.t += dt) < .9); ghosts = ghosts.filter(g => (g.t += dt) < 3);
@@ -1769,7 +1852,9 @@ function syncUI(){
   lobbyPub(); if (room && room.web) $('copy').textContent = 'Copia link'; $('arbtn').textContent = arenaCode ? 'Arena ' + arenaCode.toUpperCase() : 'Arene';
   for (const [h,c,v] of [['sz','c-sz',sz],['md','c-md',mode],['vw','c-vw',vw],['fe','c-fe',fe],['bo','c-bo',String(bo)],['tm','c-tm',teamPref]]){ $(h).value = v; $(c).value = v; }
   const ctf = mode === 'ctf';
-  $('tmw').hidden = !ctf; $('c-tmw').hidden = !ctf; $('bow').hidden = !ctf; $('c-bow').hidden = !ctf; $('few').hidden = ctf; $('c-few').hidden = ctf;
+  $('tmw').hidden = !ctf; $('c-tmw').hidden = !ctf; $('bow').hidden = !ctf; $('c-bow').hidden = !ctf; $('few').hidden = ctf || mode === 'waves'; $('c-few').hidden = ctf || mode === 'waves';
+  const goal = mode === 'koth' ? 'primo a ' + KOTH_WIN + ' s in cima' : mode === 'rabbit' ? 'primo a 10 punti' : 'primo a 10 colpi';
+  $('fe').options[0].text = goal; $('c-fe').options[0].text = goal[0].toUpperCase() + goal.slice(1);
   $('bol').textContent = 'al meglio di ' + bo;
   const steer = canSteer(); for (const id of ['c-sz','c-md','c-vw','c-fe','c-bo']) $(id).disabled = !steer;
 }
@@ -1801,7 +1886,7 @@ function boot(d){
   const sm = d.mode ?? store.get('kw.mode');
   const sb = parseInt(store.get('kw.bo'), 10);
   const ss = store.get('kw.sz'), sf = store.get('kw.fe'), sv = store.get('kw.vw');
-  loadMap(ds, 0, null, sm === 'ctf' ? 'ctf' : 'ffa', [3,5,11].includes(sb) ? sb : 3, SIZES[ss] ? ss : 'S', FE[sf] ? sf : 'k10', 0, VIEWS[sv] ? sv : '2d'); team = resolveTeam();
+  loadMap(ds, 0, null, pmd(sm), [3,5,11].includes(sb) ? sb : 3, SIZES[ss] ? ss : 'S', FE[sf] ? sf : 'k10', 0, VIEWS[sv] ? sv : '2d'); team = resolveTeam();
   $('newmap').addEventListener('click', e => { e.currentTarget.blur(); if (canSteer()) rollMap(); else addFeed('Entra nell\'arena per cambiarla'); });
   /* header menus and start-card menus share the same setters */
   for (const [h,c,set,what] of [['sz','c-sz',setSz,'cambiarne la dimensione'],['md','c-md',setMode,'cambiare modalità'],['vw','c-vw',setVw,'cambiare la vista'],['fe','c-fe',setFe,'cambiare la partita'],['bo','c-bo',setBo,'cambiare la partita']])

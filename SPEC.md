@@ -185,6 +185,20 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - Colpi speciali: geometria comune `shotHits` (segmento per il laser, anello per l'onda, punto per gli altri); laser e onda
   attraversano più bersagli e chi ne è colpito decide come sempre.
 
+## v11 — Tre nuove modalità (fase 2)
+- `md` ora: `ffa` | `ctf` | `koth` | `rabbit` | `waves`. `foe(a,b)`: tutti nemici in ffa/koth, altrimenti per squadra.
+- **Re della collina**: una piattaforma scelta dal seme (o il centro), cerchio di 130. Guadagna tempo solo chi ci sta da solo;
+  in due o più è contesa. Ognuno conta il proprio (`kh` in presence, decimi di secondo), l'host conta i bot (`bt[14]`).
+  Fine: primo a 60 s, o più secondi a tempo scaduto. I bot pattugliano la collina.
+- **Caccia al coniglio**: stato `rb:[v,k]` in presence, vince la versione più alta. Il coniglio è squadra 1, gli altri 0
+  (i cacciatori non si colpiscono tra loro). Chi colpisce il coniglio lo diventa (`onKill` su ogni uccisione, la decide la
+  vittima come sempre). Se il coniglio sparisce, l'host ne sceglie uno a caso. Punti = colpi; fine come tutti contro tutti.
+  Il coniglio ha le orecchie e 🐰 in classifica.
+- **Ondate di bot**: umani squadra 0 contro bot squadra 1 governati dall'host (niente bot di riempimento, niente rinascita).
+  Ondata n: min(12, 1 + n + giocatori) bot, livello min(2, (n−1)/2). Nuova ondata 3,5 s dopo l'ultima eliminazione.
+  Vite in comune: max(6, 3 × giocatori); i colpi subiti dagli umani le consumano. Fine a vite esaurite. L'host pubblica `wv`.
+- Fascia in alto con lo stato della modalità; la colonna K della classifica diventa S (secondi) o P (punti).
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
