@@ -10,12 +10,14 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 - WASD o frecce per guidare, Spazio per sparare, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
 - Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti) e **cattura la bandiera** (al meglio di 3/5/11).
 - Squadre Arancio (stella) e Blu (cuore): colori scelti per essere distinguibili anche con daltonismo.
-- Bolle di potenziamento: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo e **Salto 3D**, che porta la tua
+- Bandierine stile BZFlag, una alla volta: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo e **Salto 3D**, che porta la tua
   vista in 2.5D e ti fa salire sui blocchi gialli (piattaforme) dalle rampe ai due capi. Teletrasporti a vortice.
 - Statistiche personali (partite, vittorie, colpi, bandiere) salvate solo nel tuo browser.
 - Vista dell'arena, scelta a inizio partita e uguale per tutti: **2D dall'alto** oppure **2.5D nella nebbia**, con la
   telecamera alle spalle del carro, vista ridotta attorno a te, carri e colpi più veloci e la bolla «Faro» che allarga la vista.
-- Minimappa e radar in basso a destra: Maiusc+M e Maiusc+R li mostrano o nascondono.
+- Una bandierina buona dura finché la lasci (Q) o al massimo 30 secondi. Quelle «?» possono essere cattive (comandi invertiti,
+  lumaca, grilletto facile, radar in tilt, occhiali appannati) e restano attaccate 10 secondi. Ogni bandierina torna al suo posto.
+- Minimappa in alto a sinistra, radar in basso a destra: Maiusc+M e Maiusc+R li mostrano o nascondono.
 - Arene S, M, L, XL generate da un seme condiviso. Bot di riempimento fino a 4/4/6/8 carri, tre livelli.
 
 ## Come funziona la rete
@@ -29,8 +31,8 @@ un browser alla volta comanda i bot. Dettagli e storia delle decisioni in [`SPEC
 
 Limiti noti: barare è facile (va bene tra amici), e la nebbia nasconde solo a video: ogni browser riceve tutte le
 posizioni; su alcune reti aziendali o mobili la connessione diretta tra browser può non riuscire perché non c'è un server
-TURN; le statistiche restano nel singolo browser; i bot non salgono sulle piattaforme; su telefono minimappa e radar non si
-possono nascondere.
+TURN; le statistiche restano nel singolo browser; i bot salgono sulle piattaforme solo nella nebbia; su telefono minimappa e
+radar non si possono nascondere.
 
 ## Contribuire
 Il gioco è un solo file HTML senza build. Apri `index.html` con un server statico locale

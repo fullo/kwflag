@@ -149,11 +149,28 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   I bot non mirano oltre il raggio di vista.
 - Rendering 2.5D generalizzato: rotazione del mondo attorno al punto guardato, facce dei blocchi scelte dalla posizione reale
   della telecamera, poligoni ritagliati sul piano vicino, ordinamento per profondità lungo la direzione di vista.
-- Minimappa e radar in basso a destra (più in alto su schermi touch, sopra il bottone di fuoco). Radar: raggio 950, solo carri
+- Minimappa e radar (posizioni riviste in v9). Radar: raggio 950, solo carri
   e bandiere, muri come sagome; orientato col carro nella nebbia, a nord in 2D. Maiusc+M e Maiusc+R li nascondono; la
   scelta resta nel browser.
 - Schermata iniziale: le impostazioni della partita sono menu a tendina in griglia (gli stessi del menu in alto),
   audio solo in alto, istruzioni in "Come si gioca" richiudibile, statistiche su una riga. Da 1146 a 716 px su desktop.
+
+## v9 — Bandierine stile BZFlag, bot che salgono
+- Le bolle diventano bandierine (asta + stendardo nel colore della categoria con la sua icona). Se ne porta **una alla volta**:
+  passando su un'altra con una in mano non succede nulla ("una alla volta!"). Una buona dura finché la lasci (Q, o "lascia"
+  su telefono) o al massimo 30 s; lo scudo si consuma al primo colpo. Morte = bandierina persa.
+- Un terzo delle bandierine (scelta deterministica da seme, slot e generazione) è «?»: alla raccolta è buona (a caso tra tutte)
+  o cattiva al 50%. Cattive, 10 s e non si staccano: Comandi invertiti (sterzo al contrario), Lumaca (velocità 0,55),
+  Grilletto facile (spara da solo), Radar in tilt (niente minimappa né radar), Occhiali appannati (vista 200 nella nebbia,
+  alone scuro attorno al carro in 2D).
+- Una bandierina torna sempre al suo posto: lo slot è occupato finché qualcuno la porta (presence `hs`; il bot-host pubblica
+  `bh` per i suoi bot) e torna disponibile 6 s dopo la raccolta o il rilascio. I bot ne portano una alla volta, con le durate
+  di prima, e non prendono le «?» né il Salto 3D/Faro.
+- Bot e piattaforme (solo nella nebbia): se un nemico sta in alto, il bot va al capo di rampa più vicino lungo la griglia di
+  navigazione e poi sale dritto lungo l'asse lungo; in alto mira anche verso il basso. Altezza dei bot condivisa (`bt[13]`,
+  bit 4 nei colpi `bb`); le regole sui colpi tra quote valgono anche per i bot. Se un bot resta incastrato 0,4 s, si divincola
+  per 0,6 s prima di riprendere il percorso.
+- Minimappa in alto a sinistra, radar in basso a destra (su touch più in alto e a sinistra dei pulsanti).
 
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
