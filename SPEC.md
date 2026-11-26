@@ -136,6 +136,25 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   colpi a segno, colpi subiti, bandiere catturate. Registrate una volta a fine partita, mostrate nella schermata iniziale
   con "Azzera".
 
+## v8 — Vista nella nebbia, radar, schermata iniziale compatta
+- Vista come impostazione dell'arena (`vw`: `2d` | `fog`), scelta con la partita e uguale per tutti: viaggia nella tupla
+  dell'arena insieme a modalità, dimensione e fine partita; cambiarla apre una nuova epoca. Le arene aperte la mostrano.
+- Vista nella nebbia: sempre 2.5D (anche da morti), telecamera alle spalle del carro che ruota con lui (inseguimento morbido),
+  punto di mira 140 avanti. Sui blocchi gialli si sale sempre dalle rampe. La bolla "Salto 3D" diventa "Faro": raggio di
+  vista da 430 a 720 per la sua durata.
+- Nebbia: oltre il raggio di vista il terreno si scurisce a gradini; carri, colpi e fantasmi nemici fuori raggio non si
+  disegnano (in CTF i compagni sì). La minimappa mostra solo ciò che vedi. È nebbia grafica, non difesa contro chi bara:
+  ogni browser riceve comunque tutte le posizioni.
+- Più adrenalina: nella nebbia carri e colpi vanno a 1,35× (rotazione 1,1×); la gittata resta uguale (vita del colpo / 1,35).
+  I bot non mirano oltre il raggio di vista.
+- Rendering 2.5D generalizzato: rotazione del mondo attorno al punto guardato, facce dei blocchi scelte dalla posizione reale
+  della telecamera, poligoni ritagliati sul piano vicino, ordinamento per profondità lungo la direzione di vista.
+- Minimappa e radar in basso a destra (più in alto su schermi touch, sopra il bottone di fuoco). Radar: raggio 950, solo carri
+  e bandiere, muri come sagome; orientato col carro nella nebbia, a nord in 2D. Maiusc+M e Maiusc+R li nascondono; la
+  scelta resta nel browser.
+- Schermata iniziale: le impostazioni della partita sono menu a tendina in griglia (gli stessi del menu in alto),
+  audio solo in alto, istruzioni in "Come si gioca" richiudibile, statistiche su una riga. Da 1146 a 716 px su desktop.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

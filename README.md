@@ -13,6 +13,9 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 - Bolle di potenziamento: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo e **Salto 3D**, che porta la tua
   vista in 2.5D e ti fa salire sui blocchi gialli (piattaforme) dalle rampe ai due capi. Teletrasporti a vortice.
 - Statistiche personali (partite, vittorie, colpi, bandiere) salvate solo nel tuo browser.
+- Vista dell'arena, scelta a inizio partita e uguale per tutti: **2D dall'alto** oppure **2.5D nella nebbia**, con la
+  telecamera alle spalle del carro, vista ridotta attorno a te, carri e colpi più veloci e la bolla «Faro» che allarga la vista.
+- Minimappa e radar in basso a destra: Maiusc+M e Maiusc+R li mostrano o nascondono.
 - Arene S, M, L, XL generate da un seme condiviso. Bot di riempimento fino a 4/4/6/8 carri, tre livelli.
 
 ## Come funziona la rete
@@ -24,8 +27,10 @@ La stessa pagina (`index.html`) funziona in due ambienti:
 Non c'è un server autorevole: ognuno pubblica il proprio stato completo, chi viene colpito decide del colpo,
 un browser alla volta comanda i bot. Dettagli e storia delle decisioni in [`SPEC.md`](SPEC.md).
 
-Limiti noti: barare è facile (va bene tra amici); su alcune reti aziendali o mobili la connessione diretta tra browser
-può non riuscire perché non c'è un server TURN; il punteggio non è salvato tra una sessione e l'altra.
+Limiti noti: barare è facile (va bene tra amici), e la nebbia nasconde solo a video: ogni browser riceve tutte le
+posizioni; su alcune reti aziendali o mobili la connessione diretta tra browser può non riuscire perché non c'è un server
+TURN; le statistiche restano nel singolo browser; i bot non salgono sulle piattaforme; su telefono minimappa e radar non si
+possono nascondere.
 
 ## Contribuire
 Il gioco è un solo file HTML senza build. Apri `index.html` con un server statico locale
