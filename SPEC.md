@@ -123,6 +123,19 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   (tranne col perforante); dall'alto si colpisce chi sta in basso e si passa sopra le piattaforme. Presence `el:1` quando in alto;
   in 2D chi è in alto appare più grande con l'ombra spostata. I bot non prendono questa bolla e non puntano chi è in alto.
 
+## v7.1 — Rampe e statistiche personali
+- Ogni piattaforma ha una rampa a ciascun capo del lato lungo, dentro il suo ingombro: lunghezza `min(48, lato lungo / 3)`.
+  Si sale solo dalle rampe; i lati lunghi bloccano come muri. La quota segue la rampa (`z = 36 · distanza dal capo / rampa`);
+  dal lato lungo si può solo cadere giù.
+- "In alto" vale da metà rampa in su (`z ≥ 18`): soglia unica per presence `el`, bit 4 dei colpi, bersagli dei bot e
+  collisioni tra carri. I colpi partono a 0 o a 36. Un colpo a terra è fermato dalla piattaforma solo dove la superficie
+  supera la sua quota di 10: dal basso di una rampa si spara ancora lungo la rampa.
+- Rampe visibili in entrambe le viste: in 2.5D sono piani inclinati chiari con gradini e fianchi a trapezio; in 2D i capi
+  sono schiariti con tre linee a gradino.
+- Statistiche personali in `localStorage` (`kw.stats`, solo su questo browser): partite, vinte (il pareggio non conta),
+  colpi a segno, colpi subiti, bandiere catturate. Registrate una volta a fine partita, mostrate nella schermata iniziale
+  con "Azzera".
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
