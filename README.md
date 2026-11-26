@@ -1,0 +1,31 @@
+# KWFlag
+
+Clone 2D e kawaii di [BZFlag](https://www.bzflag.org/): carri armati con la faccina, colpi a stellina, arene generate,
+tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza server di gioco.
+
+**Gioca:** https://fullo.github.io/kwflag/ — per invitare qualcuno mandagli il link della tua arena
+(es. `https://fullo.github.io/kwflag/#arena-ktyfog`).
+
+## Come si gioca
+- WASD o frecce per guidare, Spazio per sparare, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
+- Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti) e **cattura la bandiera** (al meglio di 3/5/11).
+- Squadre Arancio (stella) e Blu (cuore): colori scelti per essere distinguibili anche con daltonismo.
+- Bolle di potenziamento: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo. Teletrasporti a vortice.
+- Arene S, M, L, XL generate da un seme condiviso. Bot di riempimento fino a 4/4/6/8 carri, tre livelli.
+
+## Come funziona la rete
+La stessa pagina (`index.html`) funziona in due ambienti:
+- **dentro Claude** (artifact): usa la "room" della piattaforma; giocano le persone con accesso e invito;
+- **sul web** (GitHub Pages): usa [Trystero](https://github.com/dmotz/trystero) (MIT), incluso in `trystero.js`.
+  I browser si trovano tramite relay pubblici Nostr e poi si parlano direttamente (WebRTC).
+
+Non c'è un server autorevole: ognuno pubblica il proprio stato completo, chi viene colpito decide del colpo,
+un browser alla volta comanda i bot. Dettagli e storia delle decisioni in [`SPEC.md`](SPEC.md).
+
+Limiti noti: barare è facile (va bene tra amici); su alcune reti aziendali o mobili la connessione diretta tra browser
+può non riuscire perché non c'è un server TURN; il punteggio non è salvato tra una sessione e l'altra.
+
+## Contribuire
+Il gioco è un solo file HTML senza build. Apri `index.html` con un server statico locale
+(es. `python3 -m http.server`) e proponi le modifiche con una pull request. Prima di cambiare il protocollo di rete
+leggi `SPEC.md`: i campi della presence sono condivisi con la versione dentro Claude.
