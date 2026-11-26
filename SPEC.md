@@ -110,6 +110,19 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   `appId: github.com/fullo/kwflag`, identità per scheda. Ogni arena = stanza Trystero `kw-<codice>`; lo stato per utente
   (`makeUserState('p')`) fa da presence. Nessun elenco delle arene: si entra dal link `#arena-codice` ("Copia link").
 
+## v7 — "Salto 3D": vista 2.5D e piattaforme
+- Il gioco base resta 2D. Nuova bolla di movimento "Salto 3D" (15 s): la propria vista passa a 2.5D e si può salire
+  sulle piattaforme. La vista è personale (non condivisa); la quota sì.
+- Vista 2.5D: camera prospettica dietro il giocatore, rivolta a nord; inclinazione animata da 90° (dall'alto) a 52°
+  in ~0,55 s. Pavimento, basi e vortici a terra; blocchi estrusi (piattaforme 36, muri 56); carri con scafo schiacciato e
+  cupola/faccina/nome dritti come i personaggi dei JRPG; bolle, colpi, bandiere ed effetti come sagome verticali.
+- Piattaforme = blocchi gialli (stile 2), con strisce a gradino anche in 2D. Con l'effetto attivo non bloccano: ci si sale
+  guidandoci contro (`z = 36`) e si scende uscendo dal bordo; gli altri muri bloccano anche dall'alto. A fine effetto si
+  scivola giù. Morte = effetto perso.
+- Colpi e quota: i colpi partono alla quota di chi spara (bit 4 nei proiettili); da terra non si colpisce chi sta in alto
+  (tranne col perforante); dall'alto si colpisce chi sta in basso e si passa sopra le piattaforme. Presence `el:1` quando in alto;
+  in 2D chi è in alto appare più grande con l'ombra spostata. I bot non prendono questa bolla e non puntano chi è in alto.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

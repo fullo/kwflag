@@ -10,7 +10,8 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 - WASD o frecce per guidare, Spazio per sparare, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
 - Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti) e **cattura la bandiera** (al meglio di 3/5/11).
 - Squadre Arancio (stella) e Blu (cuore): colori scelti per essere distinguibili anche con daltonismo.
-- Bolle di potenziamento: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo. Teletrasporti a vortice.
+- Bolle di potenziamento: tiro rapido, rimbalzo, perforante, scudo, invisibilità, turbo e **Salto 3D**, che porta la tua
+  vista in 2.5D e ti fa salire sui blocchi gialli (piattaforme). Teletrasporti a vortice.
 - Arene S, M, L, XL generate da un seme condiviso. Bot di riempimento fino a 4/4/6/8 carri, tre livelli.
 
 ## Come funziona la rete
