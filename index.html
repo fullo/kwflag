@@ -103,6 +103,7 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .stage{position:relative;flex:1;min-height:0;margin:0 max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));border-radius:22px;overflow:hidden;background:#3d2563;box-shadow:inset 0 0 0 4px #4a2e75}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .mob{display:none}
+#emo .ej{display:none}
 @media(max-width:600px){
   #clk{top:8px!important;font-size:13px!important;padding:3px 10px!important}
   #board{top:60px!important;left:8px!important;right:auto!important;max-width:150px;min-width:0!important;font-size:11px!important;padding:3px 8px!important;opacity:.92}
@@ -117,8 +118,20 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   #feedn[hidden]{display:none}
   #feed{display:none!important;bottom:214px!important}
   #feed.open{display:flex!important}
-  #emo [data-e]{display:none}
+  /* bear paw: a smaller fire pad with emoji toes around it, so the thumb barely moves */
+  #fire{width:76px!important;height:76px!important;right:18px!important;bottom:26px!important;font-size:15px!important}
+  #emo{display:block!important;position:absolute;right:0;bottom:0;width:0;height:0;flex-direction:initial}
+  #emo .ej{display:inline}
+  #emo .tx{display:none}
+  #emo > button{position:absolute;margin:0}
+  #jumpb,#emob,#dropb{width:48px!important;min-width:0!important;height:48px!important;min-height:0!important;padding:0!important;border-radius:50%!important;font-size:22px!important;line-height:1;background:var(--panel)!important}
+  #jumpb{right:44px;bottom:107px}
+  #emob{right:84px;bottom:84px}
+  #dropb{right:100px;bottom:40px}
+  #dropb[hidden]{display:none}
+  #emo [data-e]{display:none;right:150px;min-width:72px}
   #emo.open [data-e]{display:block}
+  #emo [data-e="0"]{bottom:182px} #emo [data-e="1"]{bottom:134px} #emo [data-e="2"]{bottom:86px} #emo [data-e="3"]{bottom:38px}
 }
 #board{position:absolute;top:12px;right:12px;background:var(--panel);border-radius:16px;padding:8px 12px;min-width:180px;font-size:14px}
 #board .row{display:grid;grid-template-columns:12px minmax(0,1fr) 2.4ch 2.4ch;gap:8px;align-items:center}
@@ -210,7 +223,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <button class="touch" id="fire" type="button">Spara</button>
   <button type="button" id="mmb" class="mob" aria-label="Minimappa" aria-pressed="false">🗺️</button>
   <button type="button" id="feedb" class="mob" aria-label="Messaggi">💬<b id="feedn" hidden>0</b></button>
-  <div class="touch" id="emo"><button type="button" id="jumpb">salta</button><button type="button" id="dropb" hidden>lascia</button><button type="button" id="emob" class="mob" aria-label="Emote" aria-expanded="false">☺</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
+  <div class="touch" id="emo"><button type="button" id="jumpb" aria-label="Salta"><span class="tx">salta</span><span class="ej" aria-hidden="true">🦘</span></button><button type="button" id="dropb" hidden aria-label="Lascia la bandierina"><span class="tx">lascia</span><span class="ej" aria-hidden="true">🏳️</span></button><button type="button" id="emob" class="mob" aria-label="Emote" aria-expanded="false">😊</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
   <section id="editor" hidden>
     <div class="edbar" id="edtools"><button type="button" data-t="0">Muro viola</button><button type="button" data-t="1">Blocco rosa</button><button type="button" data-t="2">Piattaforma gialla</button><button type="button" data-t="x">Gomma</button></div>
     <div class="edbar"><button type="button" id="edsym">Simmetria sì</button><button type="button" id="edundo">Annulla</button><button type="button" id="edclear">Svuota</button><span id="edn"></span></div>
@@ -572,7 +585,7 @@ function showStats(){
 const CODECH = 'abcdefghjkmnpqrstuvwxyz23456789';
 const newCode = () => Array.from({ length:6 }, () => CODECH[Math.floor(rnd()*CODECH.length)]).join('');
 const hashCode = () => { const m = /^#arena-([a-z0-9]{4,12})$/.exec(location.hash || ''); return m ? m[1] : ''; };
-const keys = new Set(), stick = { on:false, x:0, y:0 }, pad = { on:false, x:0, y:0, fire:false }; let fireHeld = false, padPrev = [];
+const keys = new Set(), stick = { on:false, x:0, y:0 }, pad = { on:false, x:0, y:0, fire:false }; let fireHeld = false, fireTap = 0, padPrev = [];
 /* a gamepad: left stick like the touch stick, A or RT fire, B jump, X drop, Y emote, LB/RB minimap/radar, Start play */
 function padPoll(){
   const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(g => g && g.connected) : null;
@@ -784,7 +797,7 @@ function updateMe(dt,now){
   tele(me,dt);
   if (tb && Math.hypot(me.vx,me.vy) > 40) trail(me.x,me.y,me.a);
   me.cool -= dt; me.inv -= dt;
-  if ((keys.has('f') || fireHeld || pad.fire || fxOn('trig')) && me.cool <= 0 && me.bullets.length < (fxOn('rapid') ? 6 : 3)) shoot(me);
+  if ((keys.has('f') || fireHeld || fireTap > now || pad.fire || fxOn('trig')) && me.cool <= 0 && me.bullets.length < (fxOn('rapid') ? 6 : 3)){ shoot(me); fireTap = 0; }
 }
 function updateBot(b,dt,now){
   if (!b.alive){ if (mode !== 'waves' && now >= b.respawnAt) respawn(b); return; }
@@ -2296,7 +2309,7 @@ sk.addEventListener('pointerdown', e => { stick.on = true; sk.setPointerCapture(
 sk.addEventListener('pointermove', e => { if (stick.on) stickMove(e); });
 for (const ev of ['pointerup','pointercancel']) sk.addEventListener(ev, () => { stick.on = false; stick.x = stick.y = 0; knob.style.transform = ''; });
 const fb = $('fire');
-fb.addEventListener('pointerdown', e => { fireHeld = true; fb.setPointerCapture(e.pointerId); e.preventDefault(); });
+fb.addEventListener('pointerdown', e => { fireHeld = true; fireTap = performance.now() + 350; fb.setPointerCapture(e.pointerId); e.preventDefault(); });
 for (const ev of ['pointerup','pointercancel']) fb.addEventListener(ev, () => { fireHeld = false; });
 
 function syncUI(){

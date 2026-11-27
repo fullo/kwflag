@@ -278,6 +278,12 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   stanno dietro un pulsante ☺ e si richiudono dopo l'invio. Su desktop non cambia nulla. La barra "In rete · giocatori · bot" sparisce
   quando la connessione va bene (i partecipanti si vedono già nella classifica) e torna solo se c'è un problema di rete.
 
+## v21 — Zampa d'orso (telefono)
+- Bottone di fuoco più piccolo (76 px) e, attorno, i "polpastrelli" a 68 px dal centro: 🦘 salta (sopra), 😊 emote
+  (in diagonale), 🏳️ lascia la bandierina (a sinistra, solo quando ne porti una). Il pollice resta sulla zampa.
+  Le emote si aprono in colonna a sinistra e si richiudono dopo l'invio.
+- Un tocco rapido su Spara ora spara sempre un colpo (prenotato per 350 ms se il cannone si sta ricaricando).
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
