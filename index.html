@@ -48,6 +48,15 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .help p{color:#5a4a72;margin:4px 0 8px}
 .card .sw{margin-top:8px}
 @media(max-width:520px){.opts{grid-template-columns:1fr 1fr}.card .sw{gap:6px}.card .sw button{width:32px;height:32px}}
+.alt{margin:10px 0 0;text-align:center}
+#tut{position:absolute;top:58px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border:3px solid var(--pink);border-radius:16px;padding:8px 10px 8px 16px;font-weight:600;font-size:17px;display:flex;gap:10px;align-items:center;max-width:92%}
+#tut[hidden]{display:none}
+#tutx{font:inherit;font-size:14px;border:2px solid var(--lilac);background:#fff;color:var(--bg);border-radius:10px;min-height:36px;padding:2px 10px;cursor:pointer}
+.keymap{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.keymap button{font:inherit;font-size:13px;font-weight:600;min-height:36px;padding:4px 10px;border-radius:10px;border:2px solid var(--lilac);background:#fff;color:var(--bg);cursor:pointer}
+.keymap button[aria-pressed=true]{background:var(--star)}
+.card label.chk{display:flex;gap:8px;align-items:center;font-weight:500;margin:6px 0}
+.card label.chk input{width:auto}
 .foot{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;justify-content:space-between;margin-top:8px}
 .foot .help{margin:0;flex:1 1 100%}
 .foot .stats{margin:0}
@@ -149,6 +158,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <div id="board" aria-live="off"></div>
   <div id="feed"></div>
   <div id="clk" hidden></div>
+  <div id="tut" hidden><span id="tutt"></span> <button type="button" id="tutx">Esci</button></div>
   <div id="tsc" hidden><span class="t0"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1l2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7z"/></svg>Arancio <b id="sc0">0</b></span><span class="t1"><b id="sc1">0</b> Blu<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18C1 11 1 4 5.5 3.2 8 2.8 9.4 4.4 10 5.6 10.6 4.4 12 2.8 14.5 3.2 19 4 19 11 10 18z"/></svg></span><i id="bol">al meglio di 3</i></div>
   <div id="msg" role="status"></div>
   <div id="fxb" aria-live="polite"></div>
@@ -181,6 +191,11 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <p class="hint" id="mdnote" hidden>La partita la decide chi è già in gioco: potrai cambiarla dal menu in alto una volta entrato.</p>
       <div class="foot">
       <p class="hint stats"><span id="stats"></span> <button type="button" id="statreset" class="lnk">Azzera</button></p>
+      <details class="help"><summary>Tasti, controller e consumo</summary>
+        <div class="keymap" id="keys"></div>
+        <p>Controller: levetta sinistra per guidare, A o grilletto destro spara, B salta, X lascia la bandierina, Y saluta, dorsali per minimappa e radar, Start per entrare.</p>
+        <label class="chk"><input type="checkbox" id="eco"> Basso consumo: 30 fotogrammi al secondo, niente particelle né musica</label>
+      </details>
       <details class="help"><summary>Come si gioca</summary>
         <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
@@ -188,6 +203,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
       </div>
+      <p class="alt"><button type="button" id="tutb" class="lnk">Prova guidata (1 minuto)</button> · <button type="button" id="watch" class="lnk">Guarda la partita</button></p>
       <button id="play" type="submit">Entra nell'arena</button>
     </form>
   </section>
@@ -414,7 +430,19 @@ function showStats(){
 const CODECH = 'abcdefghjkmnpqrstuvwxyz23456789';
 const newCode = () => Array.from({ length:6 }, () => CODECH[Math.floor(rnd()*CODECH.length)]).join('');
 const hashCode = () => { const m = /^#arena-([a-z0-9]{4,12})$/.exec(location.hash || ''); return m ? m[1] : ''; };
-const keys = new Set(), stick = { on:false, x:0, y:0 }; let fireHeld = false;
+const keys = new Set(), stick = { on:false, x:0, y:0 }, pad = { on:false, x:0, y:0, fire:false }; let fireHeld = false, padPrev = [];
+/* a gamepad: left stick like the touch stick, A or RT fire, B jump, X drop, Y emote, LB/RB minimap/radar, Start play */
+function padPoll(){
+  const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(g => g && g.connected) : null;
+  if (!gp){ pad.on = false; pad.fire = false; return; }
+  const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0, m = Math.hypot(ax, ay), b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), edge = i => b(i) && !padPrev[i];
+  pad.on = m > .2; pad.x = ax; pad.y = ay; pad.fire = b(0) || b(7);
+  if (edge(1)) jumpReq = true; if (edge(2)) dropFlag(); if (edge(3)) sendEmote(0); if (edge(4)) toggleMini(); if (edge(5)) toggleRadar();
+  if (spec && !me.playing){ if (edge(15)) spec.i++; if (edge(14)) spec.i--; }
+  if (edge(9) && !$('start').hidden) $('form').requestSubmit();
+  padPrev = gp.buttons.map(x => x.pressed);
+}
+addEventListener('gamepadconnected', () => addFeed('Controller collegato: levetta per guidare, A spara, B salta, X lascia'));
 const cam = { x:W/2, y:H/2 };
 
 /* ---------- geometry ---------- */
@@ -577,7 +605,7 @@ function shoot(t){
     t.bullets.push({ id:bid, x:bx, y:by, vx:ex, vy:ey, life:.3, f:LASER, z:bz, pr:1 }); return; }
   if (mine && fxOn('missile')){ t.cool = .7; bid = (bid + 1) % 100000; sfx('shoot', t.x, t.y);
     t.bullets.push({ id:bid, x:bx, y:by, vx:Math.cos(a)*sp*.75, vy:Math.sin(a)*sp*.75, life:2.6, f:MISSILE, pr:0, bn:0, z:bz }); return; }
-  bid = (bid + 1) % 100000;
+  bid = (bid + 1) % 100000; if (tut && t === me) tut.shots++;
   sfx('shoot', t.x, t.y);
   t.bullets.push({ id:bid, x:bx, y:by, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:BL/SPD(), pr, bn:on('bounce') ? 3 : 0, z:bz });
 }
@@ -602,7 +630,8 @@ function updateMe(dt,now){
   if (!me.alive){ if (now >= me.respawnAt && !document.hidden) respawn(me); return; }
   let turn = 0, thr = 0;
   if (keys.has('l')) turn -= 1; if (keys.has('r')) turn += 1; if (keys.has('u')) thr += 1; if (keys.has('d')) thr -= 1;
-  if (stick.on){ const m = Math.min(1, Math.hypot(stick.x,stick.y)); if (m > .15){ const da = angDiff(Math.atan2(stick.y,stick.x) + (fogOn() ? camYaw + Math.PI/2 : 0), me.a); turn = clamp(da*3,-1,1); thr = Math.abs(da) < 1.2 ? m*Math.cos(da) : 0; } }
+  const sk = stick.on ? stick : pad.on ? pad : null;
+  if (sk){ const m = Math.min(1, Math.hypot(sk.x,sk.y)); if (m > .15){ const da = angDiff(Math.atan2(sk.y,sk.x) + (fogOn() ? camYaw + Math.PI/2 : 0), me.a); turn = clamp(da*3,-1,1); thr = Math.abs(da) < 1.2 ? m*Math.cos(da) : 0; } }
   const tb = fxOn('turbo');
   if (fxOn('rev')) turn = -turn;
   if (jumpReq){ jumpReq = false; if (!me.vz && me.z <= platZ(me.x, me.y) + .5 && !overAt){ me.vz = 300; sfx('pick'); } }
@@ -610,7 +639,7 @@ function updateMe(dt,now){
   tele(me,dt);
   if (tb && Math.hypot(me.vx,me.vy) > 40) trail(me.x,me.y,me.a);
   me.cool -= dt; me.inv -= dt;
-  if ((keys.has('f') || fireHeld || fxOn('trig')) && me.cool <= 0 && me.bullets.length < (fxOn('rapid') ? 6 : 3)) shoot(me);
+  if ((keys.has('f') || fireHeld || pad.fire || fxOn('trig')) && me.cool <= 0 && me.bullets.length < (fxOn('rapid') ? 6 : 3)) shoot(me);
 }
 function updateBot(b,dt,now){
   if (!b.alive){ if (mode !== 'waves' && now >= b.respawnAt) respawn(b); return; }
@@ -737,6 +766,7 @@ function adjustBots(){
   if (!isHost){ if (bots.length) bots = []; return; }
   if (rbots.size){ if (!bots.length && lastBt && performance.now() - lastBt.at < 5000) bots = lastBt.list.map(e => newBot(e)); rbots.clear(); lastBt = null; }
   if (mode === 'waves') return;   // the waves bring their own bots
+  if (tut){ if (bots.length !== 1){ bots = [newBot()]; } const b = bots[0]; b.name = 'Bot Maestro'; b.lv = 0; b.cool = 99; return; }
   const humans = (me.playing ? 1 : 0) + remotes.size, need = Math.max(0, MINT[sz] - humans);
   while (bots.length > need){
     if (mode === 'ctf'){ const c = teamCounts(), big = c[0] > c[1] ? 0 : 1, i = bots.map(b => b.tm).lastIndexOf(big); bots.splice(i >= 0 ? i : bots.length-1, 1); }
@@ -1381,8 +1411,8 @@ function netSmooth(dt){
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
     al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
-    bt:isHost && remotes.size ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
-    bb:isHost && remotes.size ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
+    bt:isHost ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
+    bb:isHost ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
     fl:mode === 'ctf' ? flags.map(f => [f.v, f.s, r1(f.x), r1(f.y), f.h]) : null, sc:mode === 'ctf' ? score : null };
 }
@@ -1659,11 +1689,11 @@ function bubble(s,now){
   ctx.lineWidth = 4; ctx.strokeStyle = '#fff6fb'; ctx.strokeText(label, sl.x, sl.y+24); ctx.fillStyle = '#2b1846'; ctx.fillText(label, sl.x, sl.y+24);
 }
 function draw(now){
-  const cw = cv.clientWidth, ch = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cw = cv.clientWidth, ch = cv.clientHeight, dpr = eco ? 1 : Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = '#3d2563'; ctx.fillRect(0,0,cw,ch);
   const sc = clamp(Math.min(cw/1100, ch/740), .5, 1.25), vw = cw/sc, vh = ch/sc;
-  const fx = me.playing ? me.x : W/2, fy = me.playing ? me.y : H/2;
+  const wt = spec && !me.playing ? watched() : null, fx = me.playing ? me.x : wt ? wt.x : W/2, fy = me.playing ? me.y : wt ? wt.y : H/2;
   cam.x += (fx-cam.x)*.12; cam.y += (fy-cam.y)*.12;
   const camx = vw >= W+80 ? W/2 : clamp(cam.x, vw/2-40, W-vw/2+40), camy = vh >= H+80 ? H/2 : clamp(cam.y, vh/2-40, H-vh/2+40);
   if (me.v3 > .001){
@@ -1795,17 +1825,50 @@ function hud(now){
   $('mdnote').hidden = !(remotes.size && !me.playing); for (const id of ['c-sz','c-md','c-vw','c-fe','c-bo']) $(id).disabled = !canSteer();
   if (!$('start').hidden) renderArenas();
   const act = me.playing && me.alive ? [...PUK, ...BADK].filter(fxOn) : [];
-  $('fxb').replaceChildren(...act.map(k => { const e = document.createElement('span'); e.className = BAD[k] ? 'bad' : '';
-    e.textContent = fxName(k) + ' ' + Math.ceil((me.fx[k]-now)/1000) + ' s' + (BAD[k] ? ' · non si stacca' : coarse.matches ? '' : ' · Q per lasciarla'); return e; }));
-  $('dropb').hidden = !act.length || !!BAD[act[0]];
+  if (spec && !me.playing){ const w = watched(); const e = document.createElement('span'); e.textContent = 'Guardi ' + (w ? w.n : 'l\'arena vuota') + ' · ←/→ cambia · Invio per giocare'; $('fxb').replaceChildren(e); $('dropb').hidden = true; }
+  else
+  { $('fxb').replaceChildren(...act.map(k => { const e = document.createElement('span'); e.className = BAD[k] ? 'bad' : '';
+    e.textContent = fxName(k) + ' ' + Math.ceil((me.fx[k]-now)/1000) + ' s' + (BAD[k] ? ' · non si stacca' : coarse.matches ? '' : ' · ' + keyName(binds.q) + ' per lasciarla'); return e; }));
+  $('dropb').hidden = !act.length || !!BAD[act[0]]; }
+  if (tut) $('tutt').textContent = TUT[tut.step];
   if (feed.length && now - feed[0].t > 6000){ feed.shift(); renderFeed(); }
 }
 function renderFeed(){ $('feed').replaceChildren(...feed.map(f => { const d = document.createElement('div'); d.textContent = f.text; return d; })); }
 
 /* ---------- loop ---------- */
 let last = performance.now();
+let eco = store.get('kw.eco') === '1', spec = null, tut = null;
+/* spectator: follow any tank still in the game, without joining it */
+function watchList(){ const l = []; for (const r of remotes.values()) if (r.alive) l.push({ x:r.rx, y:r.ry, n:r.name }); for (const b of bots) if (b.alive) l.push({ x:b.x, y:b.y, n:b.name }); for (const b of rbots.values()) if (b.alive) l.push({ x:b.rx, y:b.ry, n:b.name }); return l; }
+function watched(){ const l = watchList(); if (!l.length) return null; const i = ((spec.i % l.length) + l.length) % l.length; return l[i]; }
+function startWatch(){ spec = { i:0 }; $('start').hidden = true; addFeed('Modalità spettatore: ←/→ cambia carro, Invio per giocare'); }
+function stopWatch(){ spec = null; $('start').hidden = false; }
+/* guided practice, alone: five small steps with a teacher bot that never shoots */
+const TUT = ['1/5 · Muoviti: avanti, indietro e gira (W A S D o frecce)', '2/5 · Spara tre colpi (Spazio)', '3/5 · Salta (Tab): così superi i blocchi gialli',
+  '4/5 · Prendi una bandierina: passa sopra un\'asta colorata', '5/5 · Colpisci il Bot Maestro', 'Fatto! Ora sei pronto per un\'arena vera'];
+function startTut(){
+  if (remotes.size){ addFeed('La prova guidata si fa da soli: apri un\'arena nuova'); return; }
+  me.name = $('nick').value.trim().slice(0,16) || $('nick').placeholder;
+  loadMap(newSeed(), Math.max(1,mapEp) + 1, 'Prova guidata', 'ffa', bo, 'S', 'k10', 0, '2d');
+  tut = { step:0, x:0, y:0, shots:0, k0:0, at:0 };
+  $('form').requestSubmit(); tut.x = me.x; tut.y = me.y; $('tut').hidden = false;
+}
+function endTut(msg){ tut = null; $('tut').hidden = true; bots = []; if (msg) addFeed(msg); }
+function tutStep(now){
+  if (remotes.size){ endTut('Prova guidata interrotta: è entrato qualcuno'); return; }
+  const t = tut, kills = Object.values(me.bk).reduce((a,b) => a + b, 0);
+  if (t.step === 0 && Math.hypot(me.x - t.x, me.y - t.y) > 220) t.step = 1;
+  else if (t.step === 1 && t.shots >= 3) t.step = 2;
+  else if (t.step === 2 && me.z > 30) t.step = 3;
+  else if (t.step === 3 && heldKey()){ t.step = 4; t.k0 = kills; }
+  else if (t.step === 4 && kills > t.k0){ t.step = 5; t.at = now; sfx('win'); }
+  else if (t.step === 5 && now - t.at > 5000){ endTut('Prova guidata completata!'); return; }
+}
 function frame(t){
+  if (eco && t - last < 30){ requestAnimationFrame(frame); return; }   // low power: about 30 frames a second
   const dt = Math.min(.05, (t-last)/1000) || .016; last = t;
+  padPoll(); if (eco) parts.length = 0;
+  if (tut) tutStep(t);
   netRead(); adjustBots(); netSmooth(dt); buildTargets();
   updateMe(dt,t); bots.forEach(b => updateBot(b,dt,t));
   { const want = me.playing && (fogOn() || (me.alive && fxOn('dim'))) ? 1 : 0, prev = me.v3 || 0; me.v3 = clamp(prev + clamp(want - prev, -dt*1.8, dt*1.8), 0, 1);
@@ -1823,18 +1886,39 @@ function frame(t){
 }
 
 /* ---------- input & start ---------- */
-const KM = { KeyW:'u', ArrowUp:'u', KeyS:'d', ArrowDown:'d', KeyA:'l', ArrowLeft:'l', KeyD:'r', ArrowRight:'r', Space:'f' };
+/* keys: arrows always drive; the rest can be reassigned from the start card and stays in this browser */
+const ACTS = { u:'Avanti', d:'Indietro', l:'Sinistra', r:'Destra', f:'Spara', j:'Salta', q:'Lascia bandierina' };
+const KEYDEF = { u:'KeyW', d:'KeyS', l:'KeyA', r:'KeyD', f:'Space', j:'Tab', q:'KeyQ' };
+let binds = (() => { try { const o = JSON.parse(store.get('kw.keys') || '{}'); const b = { ...KEYDEF }; for (const k in KEYDEF) if (typeof o[k] === 'string' && /^[A-Za-z0-9]{2,20}$/.test(o[k])) b[k] = o[k]; return b; } catch(e){ return { ...KEYDEF }; } })();
+let KM = {}, rebind = null;
+function buildKM(){ KM = { ArrowUp:'u', ArrowDown:'d', ArrowLeft:'l', ArrowRight:'r' }; for (const k in binds) KM[binds[k]] = k; }
+buildKM();
+const keyName = c => ({ Space:'Spazio', Tab:'Tab', Enter:'Invio', ShiftLeft:'Maiusc', ShiftRight:'Maiusc', ControlLeft:'Ctrl', AltLeft:'Alt' })[c] || c.replace(/^Key/,'').replace(/^Digit/,'');
+function toggleMini(){ showMini = !showMini; store.set('kw.mini', showMini ? '1' : '0'); addFeed('Minimappa ' + (showMini ? 'visibile' : 'nascosta') + ' (Maiusc+M)'); }
+function toggleRadar(){ showRadar = !showRadar; store.set('kw.radar', showRadar ? '1' : '0'); addFeed('Radar ' + (showRadar ? 'visibile' : 'nascosto') + ' (Maiusc+R)'); }
+addEventListener('keydown', e => {
+  if (rebind){ e.preventDefault(); e.stopPropagation();
+    if (e.code !== 'Escape' && !/^(Arrow|Digit[1-4]$)/.test(e.code)){ for (const k in binds) if (binds[k] === e.code) binds[k] = binds[rebind]; binds[rebind] = e.code; store.set('kw.keys', JSON.stringify(binds)); buildKM(); }
+    rebind = null; keysUI(); return; }
+}, { capture:true });
 addEventListener('keydown', e => { audioInit(); if (e.target.closest && e.target.closest('input,select')) return;
-  if (e.shiftKey && !e.repeat && (e.code === 'KeyM' || e.code === 'KeyR')){ e.preventDefault();
-    if (e.code === 'KeyM'){ showMini = !showMini; store.set('kw.mini', showMini ? '1' : '0'); addFeed('Minimappa ' + (showMini ? 'visibile' : 'nascosta') + ' (Maiusc+M)'); }
-    else { showRadar = !showRadar; store.set('kw.radar', showRadar ? '1' : '0'); addFeed('Radar ' + (showRadar ? 'visibile' : 'nascosto') + ' (Maiusc+R)'); }
-    return; }
-  if (e.code === 'KeyQ' && !e.repeat && !e.shiftKey){ dropFlag(); return; }
-  if (e.code === 'Tab'){ e.preventDefault(); if (!e.repeat) jumpReq = true; return; }
+  if (e.shiftKey && !e.repeat && (e.code === 'KeyM' || e.code === 'KeyR')){ e.preventDefault(); if (e.code === 'KeyM') toggleMini(); else toggleRadar(); return; }
+  if (spec && !me.playing){
+    if (['ArrowRight','ArrowLeft','KeyD','KeyA'].includes(e.code)){ spec.i += /Right|KeyD/.test(e.code) ? 1 : -1; e.preventDefault(); return; }
+    if (e.code === 'Enter' || e.code === 'Escape'){ stopWatch(); e.preventDefault(); return; } }
+  if (tut && e.code === 'Escape'){ endTut('Prova guidata interrotta'); return; }
+  const act = KM[e.code];
+  if (act === 'q'){ if (!e.repeat) dropFlag(); e.preventDefault(); return; }
+  if (act === 'j'){ e.preventDefault(); if (!e.repeat) jumpReq = true; return; }
   const em = { Digit1:0, Digit2:1, Digit3:2, Digit4:3 }[e.code]; if (em !== undefined && !e.repeat){ sendEmote(em); return; }
   const k = KM[e.code]; if (k){ keys.add(k); e.preventDefault(); } });
 addEventListener('pointerdown', () => audioInit(), { capture:true });
 addEventListener('keyup', e => { const k = KM[e.code]; if (k) keys.delete(k); });
+function keysUI(){
+  $('keys').replaceChildren(...Object.keys(ACTS).map(k => { const b = document.createElement('button'); b.type = 'button';
+    b.textContent = ACTS[k] + ': ' + (rebind === k ? 'premi un tasto…' : keyName(binds[k])); b.setAttribute('aria-pressed', String(rebind === k));
+    b.addEventListener('click', () => { rebind = rebind === k ? null : k; keysUI(); }); return b; }));
+}
 addEventListener('blur', () => { keys.clear(); fireHeld = false; });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && me.playing && me.alive){ dropMine(); me.alive = false; me.respawnAt = 0; me.bullets = []; sendNow(); }
@@ -1864,7 +1948,7 @@ function swatches(){
     b.addEventListener('click', () => { me.hue = i; store.set('kw.hue', String(i)); swatches(); }); return b; }));
 }
 $('form').addEventListener('submit', e => {
-  e.preventDefault();
+  e.preventDefault(); spec = null;
   me.name = $('nick').value.trim().replace(/[\u0000-\u001f]/g,'').slice(0,16) || $('nick').placeholder;
   store.set('kw.name', me.name);
   if (me.playing){ $('start').hidden = true; sendNow(); lobbyPub(); return; }
@@ -1893,7 +1977,13 @@ function boot(d){
     for (const id of [h,c]) $(id).addEventListener('change', e => { if (id === h) e.target.blur(); if (canSteer()) set(e.target.value); else { addFeed('Entra nell\'arena per ' + what); syncUI(); } });
   for (const id of ['tm','c-tm']) $(id).addEventListener('change', e => { if (id === 'tm') e.target.blur(); setTeamPref(e.target.value); });
   $('again').addEventListener('click', e => { e.currentTarget.blur(); if (canSteer()) rollMap((me.playing ? me.name : 'Qualcuno') + ' chiede la rivincita'); });
-  $('arbtn').addEventListener('click', e => { e.currentTarget.blur(); arenasSig = ''; renderArenas(); $('start').hidden = false; });
+  $('arbtn').addEventListener('click', e => { e.currentTarget.blur(); arenasSig = ''; renderArenas(); spec = null; $('start').hidden = false; });
+  $('watch').addEventListener('click', startWatch);
+  $('tutb').addEventListener('click', startTut);
+  $('tutx').addEventListener('click', () => endTut('Prova guidata interrotta'));
+  $('eco').checked = eco; $('eco').addEventListener('change', e => { eco = e.target.checked; store.set('kw.eco', eco ? '1' : '0'); if (eco && musicOn){ musicOn = false; audioUI(); } addFeed(eco ? 'Basso consumo: 30 fotogrammi al secondo, niente particelle' : 'Basso consumo spento'); });
+  cv.addEventListener('pointerdown', () => { if (spec && !me.playing) spec.i++; });
+  keysUI();
   $('join').addEventListener('click', () => joinArena($('code').value));
   $('code').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); joinArena($('code').value); } });
   $('create').addEventListener('click', () => joinArena(newCode()));

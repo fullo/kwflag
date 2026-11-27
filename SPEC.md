@@ -199,6 +199,17 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   Vite in comune: max(6, 3 × giocatori); i colpi subiti dagli umani le consumano. Fine a vite esaurite. L'host pubblica `wv`.
 - Fascia in alto con lo stato della modalità; la colonna K della classifica diventa S (secondi) o P (punti).
 
+## v12 — Comodità (fase 3)
+- **Spettatore** ("Guarda la partita"): non pubblica presence, la telecamera segue un carro vivo (←/→ o tocco per cambiare,
+  Invio/Esc per tornare alla scheda). L'host ora pubblica sempre i suoi bot (`bt`/`bb`), così anche lo spettatore li vede.
+- **Controller** (Gamepad API, interrogato a ogni fotogramma): levetta sinistra come lo stick touch, A/RT spara, B salta,
+  X lascia, Y saluta, LB/RB minimappa/radar, Start entra; croce ←/→ cambia carro da spettatore.
+- **Tasti riassegnabili** (Avanti, Indietro, Sinistra, Destra, Spara, Salta, Lascia) in `kw.keys`; le frecce guidano sempre,
+  1–4 e Maiusc+M/R restano fissi. Un tasto già usato si scambia con quello vecchio.
+- **Basso consumo** (`kw.eco`): ~30 fotogrammi al secondo, densità di pixel 1, niente particelle, musica spenta.
+- **Prova guidata**, solo da soli: arena S nuova in 2D, un Bot Maestro che non spara, cinque passi (muoversi, tre colpi,
+  salto, bandierina, colpire il maestro). Si interrompe con Esc o se entra qualcuno.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
