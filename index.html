@@ -107,6 +107,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   #clk{top:8px!important;font-size:13px!important;padding:3px 10px!important}
   #board{top:60px!important;left:8px!important;right:auto!important;max-width:150px;min-width:0!important;font-size:11px!important;padding:3px 8px!important;opacity:.92}
   #board .hd{display:none!important}
+  .pill.ok{display:none}
   #board.hide{display:none}
   .mob{display:block}
   #mmb{position:absolute;top:8px;left:8px;width:44px;height:44px;border-radius:12px;border:2px solid var(--lilac);background:var(--panel);font-size:20px;padding:0;cursor:pointer}
@@ -2069,6 +2070,7 @@ function hud(now){
   const n = remotes.size + (me.playing ? 1 : 0);
   $('pill').classList.toggle('on', net === 'on');
   $('lvw').hidden = !(isHost && bots.length);
+  $('pill').classList.toggle('ok', net === 'on');
   $('pillt').textContent = net === 'on' ? 'In rete · ' + n + (n === 1 ? ' giocatore' : ' giocatori') + (bots.length || rbots.size ? ' · ' + (bots.length || rbots.size) + ' bot' : '') : net === 'denied' ? 'Non collegato alla rete' : net === 'off' ? 'Allenamento con i bot' : 'Connessione…';
   const m = $('msg');
   const carry = ctf && me.playing && me.alive && flags[1-team].s === 1 && flags[1-team].h === myHolderKey();

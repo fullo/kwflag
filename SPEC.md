@@ -275,7 +275,8 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   ultimi sei, che spariscono dopo 5 s (o con un altro tocco). La minimappa è un'icona 🗺️ in alto a sinistra: un tocco la
   apre, un altro tocco (sull'icona o sulla mappa) o 10 s la richiudono. La classifica diventa compatta (prime tre righe più
   la tua, senza intestazione) sotto l'icona, e il radar prende il suo vecchio posto in alto a destra. Le quattro emote
-  stanno dietro un pulsante ☺ e si richiudono dopo l'invio. Su desktop non cambia nulla.
+  stanno dietro un pulsante ☺ e si richiudono dopo l'invio. Su desktop non cambia nulla. La barra "In rete · giocatori · bot" sparisce
+  quando la connessione va bene (i partecipanti si vedono già nella classifica) e torna solo se c'è un problema di rete.
 
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
