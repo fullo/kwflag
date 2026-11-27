@@ -247,6 +247,14 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   Vista 2D con la telecamera su di te, interpolazione tra istantanee; Spazio pausa, ←/→ ±2 s, ↑ velocità 0,5/1/2, Esc esce.
   Il gioco intanto continua; una mappa nuova azzera ciò che si può rivedere.
 
+## v18 — Trofei e cappellini (iterazione extra 3)
+- Dodici trofei salvati nel browser (`kw.troph`): primo colpo, tripletta (tre colpi a segno nella stessa vita), volo radente
+  (colpo a segno in aria), raggio (col laser), gufo (di notte), portabandiera, re della collina, coniglio d'oro, quadrifoglio
+  (vittorie nelle rispettive modalità), resistenza (ondata 5), architetto (arena dell'editor), giramondo (tutte e sei le
+  modalità, `kw.modes`). I colpi sugli altri giocatori contano quando la vittima li conferma.
+- Otto cappellini (fiocco libero; corona, elica, aureola, antenne, cappello da mago, cilindro, stellina sbloccati dai trofei),
+  scelti nella schermata iniziale (`kw.hat`) e visibili a tutti (presence `ht`).
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
