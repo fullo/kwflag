@@ -8,7 +8,7 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 
 ## Come si gioca
 - WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1–4 per le emote. Su telefono: stick a sinistra, bottone a destra.
-- Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti), **cattura la bandiera** (al meglio di 3/5/11),
+- Modalità: **tutti contro tutti** (primo a 10 colpi o 3/5/9 minuti), **cattura la bandiera** (al meglio di 3/5/11), **quattro squadre** (★ ♥ ◆ ●, prima a 20 colpi),
   **re della collina** (60 secondi da solo nel cerchio), **caccia al coniglio** (chi colpisce il coniglio lo diventa) e
   **ondate di bot** (tutti insieme, vite in comune).
 - Squadre Arancio (stella) e Blu (cuore): colori scelti per essere distinguibili anche con daltonismo.

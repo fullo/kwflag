@@ -210,6 +210,12 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - **Prova guidata**, solo da soli: arena S nuova in 2D, un Bot Maestro che non spara, cinque passi (muoversi, tre colpi,
   salto, bandierina, colpire il maestro). Si interrompe con Esc o se entra qualcuno.
 
+## v13 — Quattro squadre (fase 4a)
+- Nuova modalità `tdm4`: quattro squadre senza bandiere, Arancio ★, Blu ♥, Verde ◆, Viola ● (Okabe-Ito: arancio, blu,
+  verde-azzurro, porpora; il simbolo ripete la squadra senza colore). Punteggio di squadra = colpi dei suoi membri; vince la
+  prima a 20, o la più alta a tempo scaduto. La cattura della bandiera resta a due squadre.
+- Squadra scelta o casuale (la meno numerosa); i bot riempiono la squadra più piccola e inseguono il nemico più vicino.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

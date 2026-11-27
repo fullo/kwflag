@@ -86,6 +86,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 #board .hd{color:var(--lilac);font-size:13px}
 #board b{width:12px;height:12px;border-radius:50%;display:block}
 #board b.e0{border-radius:0;width:14px;height:14px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+#board b.e2{border-radius:0;width:12px;height:14px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+#board b.e3{width:12px;height:12px;border-radius:50%}
 #board b.e1{border-radius:0;width:14px;height:13px;clip-path:path('M7 13C0 8 0 2 3.8 1.3 5.6 1 6.6 2.2 7 3 7.4 2.2 8.4 1 10.2 1.3 14 2 14 8 7 13Z')}
 #board .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #board .v{text-align:right;font-variant-numeric:tabular-nums}
@@ -145,9 +147,9 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <button class="tg" id="sfxb" type="button" aria-pressed="true">Suoni sì</button>
   <button class="tg" id="musb" type="button" aria-pressed="false">Musica no</button>
   <label class="lv" id="szw"><span class="lt">Arena </span><select id="sz"><option value="S">Arena S</option><option value="M">Arena M</option><option value="L">Arena L</option><option value="XL">Arena XL</option></select></label>
-  <label class="lv" id="mdw"><span class="lt">Modalità </span><select id="md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
+  <label class="lv" id="mdw"><span class="lt">Modalità </span><select id="md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="tdm4">Quattro squadre</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
   <label class="lv" id="vww"><span class="lt">Vista </span><select id="vw"><option value="2d">Vista 2D</option><option value="fog">Vista nebbia</option></select></label>
-  <label class="lv" id="tmw" hidden><span class="lt">Squadra </span><select id="tm"><option value="auto">Squadra casuale</option><option value="0">Squadra Arancio ★</option><option value="1">Squadra Blu ♥</option></select></label>
+  <label class="lv" id="tmw" hidden><span class="lt">Squadra </span><select id="tm"><option value="auto">Squadra casuale</option><option value="0">Squadra Arancio ★</option><option value="1">Squadra Blu ♥</option><option value="2">Squadra Verde ◆</option><option value="3">Squadra Viola ●</option></select></label>
   <label class="lv" id="few"><span class="lt">Partita </span><select id="fe"><option value="k10">primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
   <label class="lv" id="bow" hidden><span class="lt">Partita </span><select id="bo"><option value="3">al meglio di 3</option><option value="5">al meglio di 5</option><option value="11">al meglio di 11</option></select></label>
   <label class="lv" id="lvw"><span class="lt">Bot </span><select id="lvl"><option value="0">Bot facili</option><option value="1">Bot normali</option><option value="2">Bot difficili</option></select></label>
@@ -181,11 +183,11 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <div class="sw" id="sw" role="group" aria-label="Colore del carro (tutti contro tutti)"></div>
       <fieldset class="opts"><legend>Partita</legend>
         <label class="o"><span>Arena</span><select id="c-sz"><option value="S">S</option><option value="M">M (+50%)</option><option value="L">L (+150%)</option><option value="XL">XL (+500%)</option></select></label>
-        <label class="o"><span>Modalità</span><select id="c-md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
+        <label class="o"><span>Modalità</span><select id="c-md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="tdm4">Quattro squadre</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
         <label class="o"><span>Vista</span><select id="c-vw"><option value="2d">2D dall'alto</option><option value="fog">2.5D nella nebbia</option></select></label>
         <label class="o" id="c-few"><span>Fine partita</span><select id="c-fe"><option value="k10">Primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
         <label class="o" id="c-bow" hidden><span>Fine partita</span><select id="c-bo"><option value="3">Al meglio di 3</option><option value="5">Al meglio di 5</option><option value="11">Al meglio di 11</option></select></label>
-        <label class="o" id="c-tmw" hidden><span>Squadra</span><select id="c-tm"><option value="auto">Casuale</option><option value="0">Arancio ★</option><option value="1">Blu ♥</option></select></label>
+        <label class="o" id="c-tmw" hidden><span>Squadra</span><select id="c-tm"><option value="auto">Casuale</option><option value="0">Arancio ★</option><option value="1">Blu ♥</option><option value="2">Verde ◆</option><option value="3">Viola ●</option></select></label>
         <label class="o"><span>Bot</span><select id="c-lvl"><option value="0">Facili, più bandierine</option><option value="1">Normali</option><option value="2">Difficili, meno bandierine</option></select></label>
       </fieldset>
       <p class="hint" id="mdnote" hidden>La partita la decide chi è già in gioco: potrai cambiarla dal menu in alto una volta entrato.</p>
@@ -199,7 +201,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <details class="help"><summary>Come si gioca</summary>
         <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
-        <p>Modalità: tutti contro tutti; cattura la bandiera a squadre; re della collina (resta da solo nel cerchio giallo: vince chi arriva a 60 secondi); caccia al coniglio (tutti contro il coniglio, chi lo colpisce diventa il coniglio; un punto per ogni colpo); ondate di bot (tutti insieme contro ondate sempre più forti, con vite in comune).</p>
+        <p>Modalità: tutti contro tutti; cattura la bandiera a squadre; quattro squadre (arancio ★, blu ♥, verde ◆, viola ●: vince la prima a 20 colpi); re della collina (resta da solo nel cerchio giallo: vince chi arriva a 60 secondi); caccia al coniglio (tutti contro il coniglio, chi lo colpisce diventa il coniglio; un punto per ogni colpo); ondate di bot (tutti insieme contro ondate sempre più forti, con vite in comune).</p>
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
       </div>
@@ -216,7 +218,7 @@ const R = 22, BS = 420, BL = 1.6, TS = 170;
 /* arena sizes by AREA relative to S (sides scale with the square root) */
 const SIZES = { S:1, M:1.5, L:2.5, XL:6 };
 let sz = 'S';
-const HUES = [['#ffb3c7','#e8809d'],['#a9dcff','#6aaee0'],['#ffe58a','#dcb02c'],['#b8f0c8','#5fc486'],['#d6c4ff','#9f86e6'],['#ffc9a3','#ec9a62'],['#9ff0ea','#43bfb4'],['#ffd0f4','#d58ac4'],['#ffb347','#a35c00'],['#4aa8e8','#00589a']];
+const HUES = [['#ffb3c7','#e8809d'],['#a9dcff','#6aaee0'],['#ffe58a','#dcb02c'],['#b8f0c8','#5fc486'],['#d6c4ff','#9f86e6'],['#ffc9a3','#ec9a62'],['#9ff0ea','#43bfb4'],['#ffd0f4','#d58ac4'],['#ffb347','#a35c00'],['#4aa8e8','#00589a'],['#3fc9a0','#00664a'],['#e391c4','#8e3f73']];
 const BLOCK = [['#d6c6ff','#a58ef0'],['#ffc2d4','#ec86a6'],['#ffeaa0','#e2b640']];
 const NAMES = ['Mochi','Dango','Tofu','Onigiri','Pudding','Kiwi','Momo','Yuzu','Sakura','Taiyaki'];
 const BOTN = ['Dango','Wasabi','Matcha','Azuki','Kinako','Sesamo','Daifuku'];
@@ -232,8 +234,10 @@ const LEVELS = [
 ];
 let lvl = 1;
 /* team colours: Okabe-Ito orange/blue, distinguishable with protan/deutan/tritan vision; shapes (star/heart) repeat the team without colour */
-const TEAMS = [{ n:'Arancio', h:8 }, { n:'Blu', h:9 }];
-function emblem(i,x,y,r){ if (i === 0){ star(x,y,r,-Math.PI/2); ctx.fill(); } else heart(x,y+r*.1,r*.75); }
+const TEAMS = [{ n:'Arancio', h:8, e:'★' }, { n:'Blu', h:9, e:'♥' }, { n:'Verde', h:10, e:'◆' }, { n:'Viola', h:11, e:'●' }];
+function emblem(i,x,y,r){ if (i === 0){ star(x,y,r,-Math.PI/2); ctx.fill(); } else if (i === 1) heart(x,y+r*.1,r*.75);
+  else if (i === 2){ ctx.beginPath(); ctx.moveTo(x,y-r); ctx.lineTo(x+r*.8,y); ctx.lineTo(x,y+r); ctx.lineTo(x-r*.8,y); ctx.closePath(); ctx.fill(); }
+  else ell(x,y,r*.8,r*.8); }
 const BASES = [{ x:150, y:H/2 }, { x:W-150, y:H/2 }];
 function setSize(k){
   sz = SIZES[k] ? k : 'S'; const f = Math.sqrt(SIZES[sz]);
@@ -253,14 +257,15 @@ const winner = () => score[0] >= target() ? 0 : score[1] >= target() ? 1 : -1;
 const homeFlag = i => ({ v:0, s:0, x:BASES[i].x, y:BASES[i].y, h:'' });
 let flags = [homeFlag(0), homeFlag(1)], score = [0,0];
 /* koth and ffa: everyone against everyone; ctf/rabbit/waves: by team (rabbit = 1, hunters = 0; humans 0 vs bots 1) */
-const MODES = { ffa:'Tutti contro tutti', ctf:'Cattura la bandiera', koth:'Re della collina', rabbit:'Caccia al coniglio', waves:'Ondate di bot' };
-const MODESHORT = { ffa:'Tutti contro tutti', ctf:'Bandiera', koth:'Collina', rabbit:'Coniglio', waves:'Ondate' };
+const MODES = { ffa:'Tutti contro tutti', ctf:'Cattura la bandiera', tdm4:'Quattro squadre', koth:'Re della collina', rabbit:'Caccia al coniglio', waves:'Ondate di bot' };
+const MODESHORT = { ffa:'Tutti contro tutti', ctf:'Bandiera', tdm4:'4 squadre', koth:'Collina', rabbit:'Coniglio', waves:'Ondate' };
+const teamMode = () => mode === 'ctf' || mode === 'tdm4', NT = () => mode === 'tdm4' ? 4 : 2, TDM_WIN = 20;
 const pmd = v => MODES[v] ? v : 'ffa';
 const foe = (a,b) => mode === 'ffa' || mode === 'koth' || a !== b;
 const KOTH_WIN = 60;
 let hill = null, rab = { v:0, k:'' }, wave = 0, waveAt = 0;
 const livesMax = () => Math.max(6, 3*((me.playing ? 1 : 0) + remotes.size));
-const th = (hue,tm) => mode === 'ctf' ? TEAMS[tm].h : hue;
+const th = (hue,tm) => (mode === 'ctf' || mode === 'tdm4') && tm >= 0 && tm < 4 ? TEAMS[tm].h : hue;
 const CLASSIC = [
   [860,560,80,80,1],
   [250,250,220,50,0],[250,250,50,200,0],[1330,250,220,50,0],[1500,250,50,200,0],
@@ -720,7 +725,7 @@ function nearBubble(b,now){
 }
 function botGoal(b,now){
   if (mode === 'koth' && hill) return patrolNear(b, hill.x, hill.y, hill.r*.6, now);
-  if (mode === 'rabbit' || mode === 'waves'){
+  if (mode === 'rabbit' || mode === 'waves' || mode === 'tdm4'){
     let best = null, bd = 1e9;
     for (const o of tgts){ if (o.ref === b || !foe(b.tm, o.tm)) continue; const ox = o.ref ? o.ref.x : o.x, oy = o.ref ? o.ref.y : o.y, d = Math.hypot(ox-b.x, oy-b.y); if (d < bd){ bd = d; best = { x:ox, y:oy }; } }
     if (best) return patrolNear(b, best.x, best.y, 120, now);
@@ -740,15 +745,16 @@ function hostKey(){
   return ks.length ? ks.sort()[0] : null;
 }
 function teamCounts(){
-  const c = [0,0]; if (me.playing) c[team]++;
-  for (const r of remotes.values()) c[r.tm]++;
-  for (const b of bots) if (b.tm >= 0) c[b.tm]++;
+  const c = [0,0,0,0].slice(0, NT()); if (me.playing && team < c.length) c[team]++;
+  for (const r of remotes.values()) if (r.tm < c.length) c[r.tm]++;
+  for (const b of bots) if (b.tm >= 0 && b.tm < c.length) c[b.tm]++;
   return c;
 }
 function newBot(src){
   const used = new Set(bots.map(b => b.ni)), ctf = mode === 'ctf';
   let ni = src ? src.ni : 0; if (!src) while (used.has(ni) && ni < BOTN.length-1) ni++;
   let tm = -1, role = '';
+  if (mode === 'tdm4'){ if (src && src.tm >= 0 && src.tm < 4) tm = src.tm; else { const c = teamCounts(), lo = Math.min(...c); tm = c.indexOf(lo); } }
   if (ctf){
     if (src && (src.tm === 0 || src.tm === 1)){ tm = src.tm; role = src.role || 'def'; }
     else { const c = teamCounts(); tm = c[0] === c[1] ? 1-team : c[0] < c[1] ? 0 : 1;
@@ -769,7 +775,7 @@ function adjustBots(){
   if (tut){ if (bots.length !== 1){ bots = [newBot()]; } const b = bots[0]; b.name = 'Bot Maestro'; b.lv = 0; b.cool = 99; return; }
   const humans = (me.playing ? 1 : 0) + remotes.size, need = Math.max(0, MINT[sz] - humans);
   while (bots.length > need){
-    if (mode === 'ctf'){ const c = teamCounts(), big = c[0] > c[1] ? 0 : 1, i = bots.map(b => b.tm).lastIndexOf(big); bots.splice(i >= 0 ? i : bots.length-1, 1); }
+    if (teamMode()){ const c = teamCounts(), big = c.indexOf(Math.max(...c)), i = bots.map(b => b.tm).lastIndexOf(big); bots.splice(i >= 0 ? i : bots.length-1, 1); }
     else bots.pop();
   }
   while (bots.length < need) bots.push(newBot());
@@ -1062,7 +1068,7 @@ function netRead(){
     r.pu = Array.isArray(pr.pu) ? pr.pu.slice(0,64).map(v => Math.round(num(v,0,1e6,0))) : null;
     r.seed = Math.floor(num(pr.m,0,0x7fffffff,0)); r.ep = Math.floor(num(pr.me,0,1e6,0));
     r.el = pr.el === 1; r.z = num(pr.z,0,120,r.el ? PH : 0);
-    r.md = pmd(pr.md); r.tm = pr.tm === 1 ? 1 : 0; r.bo = [3,5,11].includes(pr.bo) ? pr.bo : 3; r.sz = SIZES[pr.sz] ? pr.sz : 'S';
+    r.md = pmd(pr.md); r.tm = [0,1,2,3].includes(pr.tm) ? pr.tm : 0; r.bo = [3,5,11].includes(pr.bo) ? pr.bo : 3; r.sz = SIZES[pr.sz] ? pr.sz : 'S';
     r.fl = r.md === 'ctf' && Array.isArray(pr.fl) ? [parseFlag(pr.fl[0],0), parseFlag(pr.fl[1],1)] : null;
     r.sc = Array.isArray(pr.sc) ? [Math.round(num(pr.sc[0],0,999,0)), Math.round(num(pr.sc[1],0,999,0))] : null;
     r.kh = num(pr.kh,0,1e6,0)/10; r.wv = Number.isInteger(pr.wv) ? clamp(pr.wv,0,999) : null;
@@ -1115,7 +1121,7 @@ function readHostBots(){
   const seen = new Set(), list = [];
   h.bt.forEach((e,i) => {
     if (!Array.isArray(e) || e.length < 12 || typeof e[0] !== 'string' || !/^b[A-Za-z0-9_-]{1,40}$/.test(e[0])) return;
-    const ni = Math.round(num(e[1],0,BOTN.length-1,0)), d = { key:e[0], ni, hue:Math.round(num(e[2],0,7,0)), tm:e[3] === 0 || e[3] === 1 ? e[3] : -1,
+    const ni = Math.round(num(e[1],0,BOTN.length-1,0)), d = { key:e[0], ni, hue:Math.round(num(e[2],0,7,0)), tm:[0,1,2,3].includes(e[3]) ? e[3] : -1,
       x:num(e[4],0,W,W/2), y:num(e[5],0,H,H/2), a:num(e[6],-1e3,1e3,0), al:e[7] === 1, iv:e[8] === 1, kk:Math.round(num(e[9],0,9999,0)), dd:Math.round(num(e[10],0,9999,0)), role:e[11] === 2 ? 'att' : e[11] === 1 ? 'def' : '' };
     list.push(d); seen.add(d.key);
     let t = rbots.get(d.key);
@@ -1140,8 +1146,8 @@ function loadMap(seed, ep, msg, md, b, size, f, mst, v){
   const m = genMap(seed); walls = m.walls; floorT = m.floor; mapSeed = seed; mapEp = ep; buildNav();
   pads = m.pads; slots = m.slots; puGen = slots.map(() => 0); puAt = slots.map(() => -1e9); me.fx = {}; me.hs = -1; heldPrev = new Set(); heldNow = new Set(); ign.clear();
   flags = [homeFlag(0), homeFlag(1)]; score = [0,0];
-  if (mode === 'ctf' && prev !== 'ctf') team = resolveTeam();
-  else if (mode !== 'ctf') team = 0;
+  if (teamMode() && (prev !== mode || team >= NT())) team = resolveTeam();
+  else if (!teamMode()) team = 0;
   hill = pickHill(); rab = { v:0, k:'' }; wave = 0; waveAt = 0; me.kh = 0;
   parts = []; ghosts = []; me.bullets = [];
   if (me.playing && me.alive) respawn(me);
@@ -1217,14 +1223,15 @@ function setMode(md){
   loadMap(mapSeed, Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto: ' + MODES[md].toLowerCase(), md);
 }
 function resolveTeam(){
-  if (teamPref !== 'auto') return +teamPref;
-  const c = [0,0]; for (const r of remotes.values()) c[r.tm]++;
-  return c[0] === c[1] ? (rnd() < .5 ? 0 : 1) : c[0] < c[1] ? 0 : 1;
+  if (teamPref !== 'auto' && +teamPref < NT()) return +teamPref;
+  const c = [0,0,0,0].slice(0, NT()); for (const r of remotes.values()) if (r.tm < c.length) c[r.tm]++;
+  const lo = Math.min(...c), pick = c.map((n,i) => n === lo ? i : -1).filter(i => i >= 0);
+  return pick[Math.floor(rnd()*pick.length)];
 }
 function setTeamPref(v){
   teamPref = v; store.set('kw.team', v);
   const nt = resolveTeam();
-  if (mode === 'ctf' && nt !== team){
+  if (teamMode() && nt !== team){
     dropMine(); team = nt;
     if (me.playing && me.alive) respawn(me);
     bots = [];
@@ -1331,6 +1338,13 @@ function matchResult(){
     return { t:'Vince la squadra ' + TEAMS[w].n + '!', s:score[w] + ' a ' + score[1-w] + ', al meglio di ' + bo, w, mine:w === team };
   }
   const st = standings(); if (!st.length) return null;
+  if (mode === 'tdm4'){
+    const ts = [0,0,0,0]; for (const p of st) if (p.tm >= 0 && p.tm < 4) ts[p.tm] += p.k;
+    const best = Math.max(...ts), w = ts.indexOf(best), tie = ts.filter(v => v === best).length > 1, sc = TEAMS.map((t,i) => t.e + ' ' + ts[i]).join(' · ');
+    if (fe === 'k10') return best >= TDM_WIN ? { t:'Vince la squadra ' + TEAMS[w].n + '!', s:sc, w, mine:w === team } : null;
+    if (timeLeft() > 0) return null;
+    return tie ? { t:'Pareggio!', s:sc } : { t:'Vince la squadra ' + TEAMS[w].n + '!', s:'Tempo scaduto: ' + sc, w, mine:w === team };
+  }
   if (mode === 'waves'){
     const dead = st.filter(p => p.hu).reduce((n,p) => n + p.d, 0);
     return wave > 0 && dead >= livesMax() ? { t:'Fine all\'ondata ' + wave + '!', s:'Vite finite: avete resistito fino all\'ondata ' + wave } : null;
@@ -1348,7 +1362,7 @@ function matchStep(now){
     overAt = now; addFeed('Partita finita: ' + res.t); sfx('win');
     if (me.playing){ const mine = standings().find(p => p.me) || { k:0, d:0 };
       stats.p++; if (res.mine) stats.w++; stats.k += mine.k; stats.d += mine.d; saveStats(); }
-    if (res.w >= 0) boomSoft(BASES[res.w].x, BASES[res.w].y, HUES[TEAMS[res.w].h][0]);
+    if (res.w >= 0){ const at = mode === 'ctf' ? BASES[res.w] : me; boomSoft(at.x, at.y, HUES[TEAMS[res.w].h][0]); }
   }
   if (now - overAt > 10000 && canSteer()) rollMap('Nuova partita');
 }
@@ -1459,7 +1473,7 @@ function tank(x,y,a,hue,name,o,now){
   if (o.rb){ for (const s of [-1,1]){ ctx.fillStyle = '#fff6fb'; ctx.strokeStyle = '#ff8fc8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(s*6, -22, 4.5, 11, s*.25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#ffc2d4'; ctx.beginPath(); ctx.ellipse(s*6, -22, 2, 7, s*.25, 0, Math.PI*2); ctx.fill(); } }
   ctx.font = '600 13px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(name).width, tm = o.tm === 0 || o.tm === 1 ? o.tm : -1;
+  const tw = ctx.measureText(name).width, tm = o.tm >= 0 && o.tm < 4 ? o.tm : -1;
   if (gh && !o.me){ ctx.restore(); return; }
   if (tm >= 0){
     const w = tw + 34;
@@ -1533,7 +1547,7 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
   const ground = (x,y,fn) => { const p = P(x,y,0), px = P(x+1,y,0), py = P(x,y+1,0); if (!p || !px || !py || p.x < -300 || p.x > cw+300 || p.y < -300 || p.y > ch+300) return;
     ctx.save(); ctx.transform(px.x-p.x, px.y-p.y, py.x-p.x, py.y-p.y, p.x, p.y); ctx.translate(-x,-y); fn(); ctx.restore(); };
   const bill = (x,y,z,fn,rot) => { const p = P(x,y,z); if (!p || p.x < -200 || p.x > cw+200 || p.y < -200 || p.y > ch+300) return; ctx.save(); ctx.translate(p.x,p.y); ctx.scale(p.k,p.k); if (rot) ctx.rotate(al); ctx.translate(-x,-y); fn(); ctx.restore(); };
-  const fog = fogOn() && me.playing, FR = fogR(), seen = (x,y,tm) => !fog || Math.hypot(x - me.x, y - me.y) < FR || (mode === 'ctf' && tm === team);
+  const fog = fogOn() && me.playing, FR = fogR(), seen = (x,y,tm) => !fog || Math.hypot(x - me.x, y - me.y) < FR || (teamMode() && tm === team);
   ctx.fillStyle = '#a58ef0'; if (poly([Q(-16,-16,0),Q(W+16,-16,0),Q(W+16,H+16,0),Q(-16,H+16,0)])) ctx.fill();
   ctx.fillStyle = FLOORS[floorT][0]; if (poly([Q(0,0,0),Q(W,0,0),Q(W,H,0),Q(0,H,0)])) ctx.fill();
   ctx.fillStyle = FLOORS[floorT][1];
@@ -1555,11 +1569,11 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     if (em) speech(0, -14*v, em.t, em.age);
     for (let i = 0; i < 2; i++) if (mode === 'ctf' && flags[i].s === 1 && Math.hypot(flagPos(i).x-x, flagPos(i).y-y) < 2) flagIcon(16, -4-14*v, i, now, .75);
     ctx.restore(); } }); };
-  for (const t of bots) if (t.alive) tk(t.x,t.y,t.z || 0,t.a,th(t.hue,t.tm),t.name,{ fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed }, null, t.tm);
-  for (const t of rbots.values()) if (t.alive) tk(t.rx,t.ry,t.el ? PH : 0,t.ra,th(t.hue,t.tm),t.name,{ fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 }, null, t.tm);
-  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.z || 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
+  for (const t of bots) if (t.alive) tk(t.x,t.y,t.z || 0,t.a,th(t.hue,t.tm),t.name,{ fx:bfxStr(t), tm:teamMode() ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed }, null, t.tm);
+  for (const t of rbots.values()) if (t.alive) tk(t.rx,t.ry,t.el ? PH : 0,t.ra,th(t.hue,t.tm),t.name,{ fx:t.fx, tm:teamMode() ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 }, null, t.tm);
+  for (const r of remotes.values()) if (r.alive) tk(r.rx,r.ry,r.z || 0,r.ra,th(r.hue,r.tm),r.name,{ fx:r.fx, tm:teamMode() ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },
     r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g') ? { t:EMO[r.emI], age:(pn - r.emAt)/1000 } : null, r.tm);
-  if (me.playing && me.alive) tk(me.x,me.y,me.z || 0,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:mode === 'ctf' ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },
+  if (me.playing && me.alive) tk(me.x,me.y,me.z || 0,me.a,th(me.hue,team),me.name,{ fx:fxStr(), tm:teamMode() ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },
     me.emAt && pn - me.emAt < 2500 ? { t:EMO[me.em], age:(pn - me.emAt)/1000 } : null, team);
   const bl = (b,z,mine) => { if (!mine && !seen(b.x,b.y,-2)) return; const f = b.f || 0;
     if (f & SHOCK) return ground(b.x, b.y, () => bullet(b,now));
@@ -1713,13 +1727,13 @@ function draw(now){
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s !== 1) flagIcon(flags[i].x, flags[i].y, i, now, 1);
   ghosts.forEach(g => ghost(g,now));
   me.bullets.forEach(b => bullet(b,now)); bots.forEach(t => t.bullets.forEach(b => bullet(b,now))); rbots.forEach(t => t.bc.forEach(b => bullet(b,now))); remotes.forEach(r => r.bc.forEach(b => bullet(b,now)));
-  for (const t of bots) if (t.alive) tank(t.x,t.y,t.a,th(t.hue,t.tm),t.name,{ el:(t.z || 0) >= ELZ, fx:bfxStr(t), tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed },now);
-  for (const t of rbots.values()) if (t.alive) tank(t.rx,t.ry,t.ra,th(t.hue,t.tm),t.name,{ el:t.el, fx:t.fx, tm:mode === 'ctf' ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 },now);
-  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:(r.z || 0)/PH, fx:r.fx, tm:mode === 'ctf' ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
+  for (const t of bots) if (t.alive) tank(t.x,t.y,t.a,th(t.hue,t.tm),t.name,{ el:(t.z || 0) >= ELZ, fx:bfxStr(t), tm:teamMode() ? t.tm : -1, rb:isRab(t.tm), inv:t.inv > 0, tread:t.tread, seed:t.seed },now);
+  for (const t of rbots.values()) if (t.alive) tank(t.rx,t.ry,t.ra,th(t.hue,t.tm),t.name,{ el:t.el, fx:t.fx, tm:teamMode() ? t.tm : -1, rb:isRab(t.tm), inv:t.iv, tread:t.tread, seed:t.ni*1.3 },now);
+  for (const r of remotes.values()) if (r.alive) tank(r.rx,r.ry,r.ra,th(r.hue,r.tm),r.name,{ el:(r.z || 0)/PH, fx:r.fx, tm:teamMode() ? r.tm : -1, rb:isRab(r.tm), inv:r.iv, tread:r.tread, seed:r.key.length*.7 },now);
   const pn = performance.now();
   for (const r of remotes.values()) if (r.alive && r.emAt && pn - r.emAt < 2500 && !r.fx.includes('g')) speech(r.rx, r.ry, EMO[r.emI], (pn - r.emAt)/1000);
   if (me.playing && me.alive && me.emAt && pn - me.emAt < 2500) speech(me.x, me.y, EMO[me.em], (pn - me.emAt)/1000);
-  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ el:(me.z || 0)/PH, fx:fxStr(), tm:mode === 'ctf' ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
+  if (me.playing && me.alive) tank(me.x,me.y,me.a,th(me.hue,team),me.name,{ el:(me.z || 0)/PH, fx:fxStr(), tm:teamMode() ? team : -1, rb:isRab(team), me:true, inv:me.inv > 0, tread:me.tread, seed:me.seed },now);
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s === 1){ const p = flagPos(i); flagIcon(p.x+16, p.y-4, i, now, .75); }
   for (const p of parts){ ctx.globalAlpha = Math.max(0,p.life/p.max); ctx.fillStyle = p.c;
     if (p.sh === 0) heart(p.x,p.y,p.r); else if (p.sh === 1){ star(p.x,p.y,p.r*1.3,p.rot); ctx.fill(); } else ell(p.x,p.y,p.r,p.r); }
@@ -1740,7 +1754,7 @@ function corner(cw, ch){
   if (showMini) minimap(12, 12, mw);
 }
 /* who you may see: in the fog only what is in sight, your team, and yourself */
-const inSight = (x,y,tm) => !(fogOn() && me.playing) || Math.hypot(x - me.x, y - me.y) < fogR() || (mode === 'ctf' && tm === team);
+const inSight = (x,y,tm) => !(fogOn() && me.playing) || Math.hypot(x - me.x, y - me.y) < fogR() || (teamMode() && tm === team);
 function minimap(ox, oy, mw){
   const ms = mw/W, mh = H*ms, X = ox + 6, Y = oy + 6;
   ctx.fillStyle = 'rgba(43,24,70,.78)'; rr(ox,oy,mw+12,mh+12,12); ctx.fill();
@@ -1749,7 +1763,7 @@ function minimap(ox, oy, mw){
   const dot = (x,y,c,r) => { ctx.fillStyle = c; ell(X+x*ms, Y+y*ms, r, r); };
   if (mode === 'ctf') for (let i = 0; i < 2; i++){ const c = HUES[TEAMS[i].h]; ctx.globalAlpha = .6; dot(BASES[i].x,BASES[i].y,c[0],64*ms+1); ctx.globalAlpha = 1; }
   if (mode === 'koth' && hill){ ctx.globalAlpha = .7; dot(hill.x, hill.y, '#ffd84a', hill.r*ms); ctx.globalAlpha = 1; }
-  const mark = (x,y,hue,tm) => { if (!inSight(x,y,tm)) return; if (mode === 'ctf'){ ctx.fillStyle = HUES[TEAMS[tm].h][1]; emblem(tm, X+x*ms, Y+y*ms, 4.5); } else dot(x,y,HUES[hue][1],3); };
+  const mark = (x,y,hue,tm) => { if (!inSight(x,y,tm)) return; if (teamMode() && tm >= 0){ ctx.fillStyle = HUES[TEAMS[tm].h][1]; emblem(tm, X+x*ms, Y+y*ms, 4.5); } else dot(x,y,HUES[hue][1],3); };
   for (const t of bots) if (t.alive && !bOn(t,'ghost')) mark(t.x,t.y,t.hue,t.tm);
   for (const t of rbots.values()) if (t.alive && !(t.fx || '').includes('g')) mark(t.rx,t.ry,t.hue,t.tm);
   for (const pr of pads) for (const p of pr){ ctx.fillStyle = '#7b5fd6'; ell(X+p.x*ms, Y+p.y*ms, 3.5, 3.5); }
@@ -1773,8 +1787,8 @@ function radar(cx, cy, rad){
   ctx.strokeStyle = 'rgba(214,198,255,.8)'; ctx.lineWidth = 2/k; ctx.strokeRect(0, 0, W, H);
   for (const w of walls){ ctx.fillStyle = isPlat(w) ? 'rgba(255,234,160,.55)' : 'rgba(214,198,255,.55)'; ctx.fillRect(w[0], w[1], w[2], w[3]); }
   const blip = (x,y,c,tm) => { if (Math.hypot(x-ox, y-oy) > RADR) return; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, 4.5/k, 0, Math.PI*2); ctx.fill();
-    if (mode === 'ctf' && tm >= 0){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5/k; ctx.stroke(); } };
-  const col = (hue,tm) => mode === 'ctf' ? HUES[TEAMS[tm].h][0] : HUES[hue][0];
+    if (teamMode() && tm >= 0){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5/k; ctx.stroke(); } };
+  const col = (hue,tm) => teamMode() && tm >= 0 ? HUES[TEAMS[tm].h][0] : HUES[hue][0];
   for (const t of bots) if (t.alive) blip(t.x, t.y, col(t.hue,t.tm), t.tm);
   for (const t of rbots.values()) if (t.alive) blip(t.rx, t.ry, col(t.hue,t.tm), t.tm);
   for (const r of remotes.values()) if (r.alive && !r.fx.includes('h')) blip(r.rx, r.ry, col(r.hue,r.tm), r.tm);
@@ -1799,7 +1813,7 @@ function hud(now){
   const list = [], mk = myKey();
   const ctf = mode === 'ctf';
   list.push(...standings());
-  list.sort((a,b) => (ctf ? a.tm - b.tm : 0) || b.k - a.k || a.d - b.d);
+  list.sort((a,b) => (teamMode() ? a.tm - b.tm : 0) || b.k - a.k || a.d - b.d);
   $('tsc').hidden = !ctf; $('sc0').textContent = score[0]; $('sc1').textContent = score[1];
   const res = overAt ? matchResult() : null;
   $('win').hidden = !res;
@@ -1809,9 +1823,10 @@ function hud(now){
     let t = tt || 'Primo a 10 colpi';
     if (mode === 'koth'){ const k = hill && hill.king; t = (tt || 'Primo a ' + KOTH_WIN + ' s') + ' · collina: ' + (k ? (k === me ? 'tua! ' + Math.floor(me.kh || 0) + ' s' : k.name) : hill && hill.busy ? 'contesa' : 'libera'); }
     if (mode === 'rabbit') t = (tt || 'Primo a 10 punti') + ' · ' + (rab.k ? (rab.k === myHolderKey() ? 'sei il coniglio!' : 'coniglio: ' + nameOf(rab.k)) : 'si sceglie il coniglio…');
+    if (mode === 'tdm4'){ const ts = [0,0,0,0]; for (const p of list) if (p.tm >= 0 && p.tm < 4) ts[p.tm] += p.k; t = (tt || 'Prima a ' + TDM_WIN) + ' · ' + TEAMS.map((x,i) => x.e + ' ' + ts[i]).join('  '); }
     if (mode === 'waves'){ const dead = list.filter(p => p.hu).reduce((n,p) => n + p.d, 0); t = 'Ondata ' + wave + ' · vite ' + Math.max(0, livesMax() - dead) + ' · bot ' + (bots.length ? bots.filter(b => b.alive).length : [...rbots.values()].filter(b => b.alive).length); }
     $('clk').textContent = t; }
-  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', ctf ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, ctf ? p.tm : -1)));
+  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', teamMode() ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, teamMode() ? p.tm : -1)));
   const n = remotes.size + (me.playing ? 1 : 0);
   $('pill').classList.toggle('on', net === 'on');
   $('lvw').hidden = !(isHost && bots.length);
@@ -1936,8 +1951,9 @@ function syncUI(){
   lobbyPub(); if (room && room.web) $('copy').textContent = 'Copia link'; $('arbtn').textContent = arenaCode ? 'Arena ' + arenaCode.toUpperCase() : 'Arene';
   for (const [h,c,v] of [['sz','c-sz',sz],['md','c-md',mode],['vw','c-vw',vw],['fe','c-fe',fe],['bo','c-bo',String(bo)],['tm','c-tm',teamPref]]){ $(h).value = v; $(c).value = v; }
   const ctf = mode === 'ctf';
-  $('tmw').hidden = !ctf; $('c-tmw').hidden = !ctf; $('bow').hidden = !ctf; $('c-bow').hidden = !ctf; $('few').hidden = ctf || mode === 'waves'; $('c-few').hidden = ctf || mode === 'waves';
-  const goal = mode === 'koth' ? 'primo a ' + KOTH_WIN + ' s in cima' : mode === 'rabbit' ? 'primo a 10 punti' : 'primo a 10 colpi';
+  $('tmw').hidden = !teamMode(); $('c-tmw').hidden = !teamMode();
+  for (const id of ['tm','c-tm']) for (const o of $(id).options) if (o.value === '2' || o.value === '3') o.hidden = mode !== 'tdm4'; $('bow').hidden = !ctf; $('c-bow').hidden = !ctf; $('few').hidden = ctf || mode === 'waves'; $('c-few').hidden = ctf || mode === 'waves';
+  const goal = mode === 'koth' ? 'primo a ' + KOTH_WIN + ' s in cima' : mode === 'rabbit' ? 'primo a 10 punti' : mode === 'tdm4' ? 'prima squadra a ' + TDM_WIN : 'primo a 10 colpi';
   $('fe').options[0].text = goal; $('c-fe').options[0].text = goal[0].toUpperCase() + goal.slice(1);
   $('bol').textContent = 'al meglio di ' + bo;
   const steer = canSteer(); for (const id of ['c-sz','c-md','c-vw','c-fe','c-bo']) $(id).disabled = !steer;
@@ -1953,7 +1969,7 @@ $('form').addEventListener('submit', e => {
   store.set('kw.name', me.name);
   if (me.playing){ $('start').hidden = true; sendNow(); lobbyPub(); return; }
   me.seed = (me.name.length*.37) % 1; me.playing = true;
-  if (mode === 'ctf'){ const nt = resolveTeam(); if (nt !== team) team = nt; bots = []; }
+  if (teamMode()){ const nt = resolveTeam(); if (nt !== team) team = nt; bots = []; }
   respawn(me);
   cam.x = me.x; cam.y = me.y; $('start').hidden = true; $('play').textContent = 'Torna a giocare'; sendNow(); lobbyPub();
 });
@@ -1966,7 +1982,7 @@ function boot(d){
   showMini = store.get('kw.mini') !== '0'; showRadar = store.get('kw.radar') !== '0';
   setLevel(sl >= 0 && sl <= 2 ? sl : 1);
   const ds = Number.isInteger(d.seed) && d.seed >= 0 ? d.seed : newSeed();
-  const tp = d.team ?? store.get('kw.team'); teamPref = tp === '0' || tp === '1' ? tp : 'auto';
+  const tp = d.team ?? store.get('kw.team'); teamPref = ['0','1','2','3'].includes(tp) ? tp : 'auto';
   const sm = d.mode ?? store.get('kw.mode');
   const sb = parseInt(store.get('kw.bo'), 10);
   const ss = store.get('kw.sz'), sf = store.get('kw.fe'), sv = store.get('kw.vw');
