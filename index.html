@@ -109,6 +109,16 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   #board{top:60px!important;left:8px!important;right:auto!important;max-width:150px;min-width:0!important;font-size:11px!important;padding:3px 8px!important;opacity:.92}
   #board .hd{display:none!important}
   .pill.ok{display:none}
+  /* while playing the header goes away: the whole screen is for the arena; the same things are in the ☰ menu */
+  body.inplay .top{display:none}
+  body.inplay .stage{margin:env(safe-area-inset-top,0px) 4px 4px;border-radius:14px}
+  #menub{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:10px;border:2px solid var(--lilac);background:var(--panel);color:var(--ink);font-size:18px;padding:0;cursor:pointer;opacity:.75}
+  #menub.warn::after{content:'';position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:#ff5c5c}
+  #menu{position:absolute;top:52px;right:8px;display:flex;flex-direction:column;gap:6px;background:var(--ink);color:var(--bg);border-radius:16px;padding:10px;z-index:5;max-width:240px}
+  #menu[hidden]{display:none}
+  #menu p{margin:0 0 4px;font-size:13px}
+  #menu button{font:inherit;font-weight:600;min-height:44px;border-radius:12px;border:2px solid var(--lilac);background:#fff;color:var(--bg);cursor:pointer}
+  #m-new.sure{background:var(--pink)}
   #board.hide{display:none}
   .mob{display:block}
   #mmb{position:absolute;top:8px;left:8px;width:38px;height:38px;border-radius:10px;border:2px solid var(--lilac);background:var(--panel);font-size:17px;padding:0;cursor:pointer}
@@ -228,6 +238,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <div class="touch" id="stick"><div id="knob"></div></div>
   <button class="touch" id="fire" type="button">Spara</button>
   <button type="button" id="mmb" class="mob" aria-label="Minimappa" aria-pressed="false">🗺️</button>
+  <button type="button" id="menub" class="mob" aria-label="Menu" aria-expanded="false">☰</button>
+  <div id="menu" hidden><p id="menunet"></p><button type="button" id="m-ar">Arene e impostazioni</button><button type="button" id="m-new">Nuova mappa</button><button type="button" id="m-sfx">Suoni</button><button type="button" id="m-mus">Musica</button></div>
   <button type="button" id="feedb" class="mob" aria-label="Messaggi">💬<b id="feedn" hidden>0</b></button>
   <div class="touch" id="emo"><button type="button" id="jumpb" aria-label="Salta"><span class="tx">salta</span><span class="ej" aria-hidden="true">🦘</span></button><button type="button" id="dropb" hidden aria-label="Lascia la bandierina"><span class="tx">lascia</span><span class="ej" aria-hidden="true">🏳️</span></button><button type="button" id="emob" class="mob" aria-label="Emote" aria-expanded="false">😊</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
   <section id="editor" hidden>
@@ -2399,6 +2411,18 @@ function boot(d){
   $('musb').addEventListener('click', e => { e.currentTarget.blur(); togM(); });
   for (const b of $('emo').querySelectorAll('[data-e]')) b.addEventListener('pointerdown', e => { e.preventDefault(); sendEmote(+b.dataset.e); $('emo').classList.remove('open'); $('emob').setAttribute('aria-expanded','false'); });
   $('emob').addEventListener('pointerdown', e => { e.preventDefault(); const o = $('emo').classList.toggle('open'); $('emob').setAttribute('aria-expanded', String(o)); });
+  let menuT = 0, newSure = 0;
+  const menuOpen = o => { $('menu').hidden = !o; $('menub').setAttribute('aria-expanded', String(o)); menuT = o ? performance.now() + 8000 : 0; if (o) menuUI(); };
+  function menuUI(){ $('m-sfx').textContent = 'Suoni ' + (sfxOn ? 'sì' : 'no'); $('m-mus').textContent = 'Musica ' + (musicOn ? 'sì' : 'no'); $('menunet').textContent = $('pillt').textContent;
+    $('m-new').textContent = newSure > performance.now() ? 'Tocca di nuovo: cambia la mappa a tutti' : 'Nuova mappa'; $('m-new').classList.toggle('sure', newSure > performance.now()); }
+  $('menub').addEventListener('click', e => { e.currentTarget.blur(); menuOpen($('menu').hidden); });
+  $('m-ar').addEventListener('click', () => { menuOpen(false); arenasSig = ''; renderArenas(); spec = null; $('start').hidden = false; });
+  $('m-new').addEventListener('click', () => { if (newSure > performance.now()){ newSure = 0; menuOpen(false); if (canSteer()) rollMap(); else addFeed('Entra nell\'arena per cambiarla'); } else { newSure = performance.now() + 3000; menuT = performance.now() + 8000; menuUI(); } });
+  $('m-sfx').addEventListener('click', () => { togS(); menuUI(); });
+  $('m-mus').addEventListener('click', () => { togM(); menuUI(); });
+  setInterval(() => { const now = performance.now(); if (menuT && now > menuT) menuOpen(false); else if (!$('menu').hidden) menuUI();
+    document.body.classList.toggle('inplay', mob.matches && me.playing && $('start').hidden && !editing && !replay);
+    $('menub').classList.toggle('warn', net !== 'on'); }, 250);
   $('mmb').addEventListener('click', e => { e.currentTarget.blur(); miniUntil = miniUntil > performance.now() ? 0 : performance.now() + 10000; });
   $('feedb').addEventListener('click', e => { e.currentTarget.blur(); if (feedUntil > performance.now()){ feedUntil = 0; $('feed').classList.remove('open'); } else openFeed(); });
   mob.addEventListener('change', () => { renderFeed(); $('board').classList.remove('hide'); });

@@ -287,6 +287,13 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - Comandi semitrasparenti (opacità 0,5, piena mentre li premi), Spara compreso, per vedere cosa c'è sotto.
 - Un tocco rapido su Spara ora spara sempre un colpo (prenotato per 350 ms se il cannone si sta ricaricando).
 
+## v22 — Telefono a schermo pieno
+- In gioco l'intestazione (logo, arene, nuova mappa, suoni, stato della rete) sparisce e l'arena usa tutto lo schermo,
+  con margini di 4 px e l'area sicura in alto. Le stesse cose stanno nel menu ☰ in alto a destra: Arene e impostazioni,
+  Nuova mappa (serve un secondo tocco entro 3 s, perché cambia la mappa a tutti), Suoni, Musica, stato della rete.
+  Con un problema di rete il ☰ ha un pallino rosso. Non le ho messe in fondo: lì ci sono i pollici, e un tocco per sbaglio
+  su "Nuova mappa" cambierebbe l'arena a tutti.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
