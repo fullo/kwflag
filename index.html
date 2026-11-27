@@ -49,6 +49,13 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .card .sw{margin-top:8px}
 @media(max-width:520px){.opts{grid-template-columns:1fr 1fr}.card .sw{gap:6px}.card .sw button{width:32px;height:32px}}
 .alt{margin:10px 0 0;text-align:center}
+#rp{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:var(--ink);color:var(--bg);border:3px solid var(--pink);border-radius:16px;padding:6px 8px 6px 14px;font-weight:600;max-width:94%;flex-wrap:wrap;justify-content:center}
+#rp[hidden]{display:none}
+.rpbar{display:block;width:160px;height:10px;border-radius:5px;background:#e9dcff;overflow:hidden}
+.rpbar i{display:block;height:100%;width:0;background:var(--pink)}
+.rph{font-size:13px;font-weight:500;color:#5a4a72}
+#rpx{font:inherit;font-size:14px;border:2px solid var(--lilac);background:#fff;color:var(--bg);border-radius:10px;min-height:36px;padding:2px 10px;cursor:pointer}
+#rpb{font:inherit;font-weight:600;margin-left:6px;min-height:44px;padding:6px 14px;border-radius:14px;border:2px solid var(--lilac);background:#fff;color:var(--bg);cursor:pointer}
 #editor{position:absolute;left:8px;right:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px 14px;pointer-events:none}
 #editor[hidden]{display:none}
 .edbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;background:rgba(43,24,70,.82);padding:6px;border-radius:14px;color:var(--ink);font-size:14px}
@@ -176,7 +183,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <div id="tsc" hidden><span class="t0"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1l2.6 6 6.4.5-4.9 4.2 1.5 6.3L10 14.6 4.4 18l1.5-6.3L1 7.5 7.4 7z"/></svg>Arancio <b id="sc0">0</b></span><span class="t1"><b id="sc1">0</b> Blu<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18C1 11 1 4 5.5 3.2 8 2.8 9.4 4.4 10 5.6 10.6 4.4 12 2.8 14.5 3.2 19 4 19 11 10 18z"/></svg></span><i id="bol">al meglio di 3</i></div>
   <div id="msg" role="status"></div>
   <div id="fxb" aria-live="polite"></div>
-  <div id="win" hidden><p id="wint"></p><p id="wins"></p><button id="again" type="button">Rivincita adesso</button></div>
+  <div id="win" hidden><p id="wint"></p><p id="wins"></p><button id="again" type="button">Rivincita adesso</button> <button id="rpb" type="button">Rivedi gli ultimi 20 s</button></div>
+  <div id="rp" hidden><span id="rpt">Replay</span><span class="rpbar"><i id="rpbar"></i></span><span class="rph">Spazio pausa · ←/→ salta · ↑ velocità · Esc esce</span><button type="button" id="rpx">Esci</button></div>
   <div class="touch" id="stick"><div id="knob"></div></div>
   <button class="touch" id="fire" type="button">Spara</button>
   <div class="touch" id="emo"><button type="button" id="jumpb">salta</button><button type="button" id="dropb" hidden>lascia</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
@@ -222,7 +230,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
         <label class="chk"><input type="checkbox" id="eco"> Basso consumo: 30 fotogrammi al secondo, niente particelle né musica</label>
       </details>
       <details class="help"><summary>Come si gioca</summary>
-        <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
+        <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote, R per il replay degli ultimi 20 secondi (da colpito o a fine partita). Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
         <p>Modalità: tutti contro tutti; cattura la bandiera a squadre; quattro squadre (arancio ★, blu ♥, verde ◆, viola ●: vince la prima a 20 colpi); re della collina (resta da solo nel cerchio giallo: vince chi arriva a 60 secondi); caccia al coniglio (tutti contro il coniglio, chi lo colpisce diventa il coniglio; un punto per ogni colpo); ondate di bot (tutti insieme contro ondate sempre più forti, con vite in comune).</p>
         <p>Meteo: col vento i colpi deviano (la freccia in alto dice da dove soffia); di notte vedi solo quello che illuminano i fari.</p>
@@ -1811,6 +1819,7 @@ function draw(now){
   if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = '#3d2563'; ctx.fillRect(0,0,cw,ch);
   if (editing){ drawEditor(cw, ch); return; }
+  if (replay){ drawReplay(cw, ch, now); return; }
   const sc = clamp(Math.min(cw/1100, ch/740), .5, 1.25), vw = cw/sc, vh = ch/sc;
   const wt = spec && !me.playing ? watched() : null, fx = me.playing ? me.x : wt ? wt.x : W/2, fy = me.playing ? me.y : wt ? wt.y : H/2;
   cam.x += (fx-cam.x)*.12; cam.y += (fy-cam.y)*.12;
@@ -1942,7 +1951,7 @@ function hud(now){
   $('pillt').textContent = net === 'on' ? 'In rete · ' + n + (n === 1 ? ' giocatore' : ' giocatori') + (bots.length || rbots.size ? ' · ' + (bots.length || rbots.size) + ' bot' : '') : net === 'denied' ? 'Non collegato alla rete' : net === 'off' ? 'Allenamento con i bot' : 'Connessione…';
   const m = $('msg');
   const carry = ctf && me.playing && me.alive && flags[1-team].s === 1 && flags[1-team].h === myHolderKey();
-  if (me.playing && !me.alive && me.respawnAt > now){ m.style.display = 'block'; m.textContent = 'Colpito da ' + me.killer + '! Torni tra ' + Math.ceil((me.respawnAt-now)/1000) + '…'; }
+  if (me.playing && !me.alive && me.respawnAt > now){ m.style.display = 'block'; m.textContent = 'Colpito da ' + (me.killer || 'qualcuno') + '! Torni tra ' + Math.ceil((me.respawnAt-now)/1000) + '…' + (coarse.matches || replay ? '' : ' (R per rivedere)'); }
   else if (carry){ m.style.display = 'block'; m.textContent = flags[team].s === 0 ? 'Hai la bandiera! Portala alla base ' + TEAMS[team].n : 'Hai la bandiera, ma la vostra è fuori base: recuperatela'; }
   else if (ctf && me.playing && flags[team].s === 1){ m.style.display = 'block'; m.textContent = holderName(flags[team].h) + ' ha la vostra bandiera!'; }
   else m.style.display = 'none';
@@ -1969,6 +1978,43 @@ function startWatch(){ spec = { i:0 }; $('start').hidden = true; addFeed('Modali
 function stopWatch(){ spec = null; $('start').hidden = false; }
 /* arena editor: drag to draw blocks on a 10 px grid, optional left-right mirror, share as a code */
 let editing = null;
+/* replay: the last 20 seconds at 10 snapshots a second, watched from above with the camera on you */
+let recs = [], lastRec = 0, replay = null;
+function record(now){
+  if (now - lastRec < 100 || replay) return; lastRec = now;
+  const tm = t => teamMode() ? t : -1, tk = [], sh = [];
+  if (me.playing && me.alive) tk.push(['me', me.x, me.y, me.a, me.hue, tm(team), me.name, me.z || 0, 1, isRab(team) ? 1 : 0]);
+  for (const r of remotes.values()) if (r.alive && !r.fx.includes('g')) tk.push([r.key, r.rx, r.ry, r.ra, r.hue, tm(r.tm), r.name, r.z || 0, 0, isRab(r.tm) ? 1 : 0]);
+  for (const b of bots) if (b.alive && !bOn(b,'ghost')) tk.push([b.key, b.x, b.y, b.a, b.hue, tm(b.tm), b.name, b.z || 0, 0, isRab(b.tm) ? 1 : 0]);
+  for (const b of rbots.values()) if (b.alive && !(b.fx || '').includes('g')) tk.push([b.key, b.rx, b.ry, b.ra, b.hue, tm(b.tm), b.name, b.el ? PH : 0, 0, isRab(b.tm) ? 1 : 0]);
+  for (const list of [me.bullets, ...bots.map(b => b.bullets), ...[...rbots.values()].map(b => b.bc), ...[...remotes.values()].map(r => r.bc)])
+    for (const b of list) if (!b.dead) sh.push([b.x, b.y, b.vx, b.vy, b.f ?? ((b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0))]);
+  recs.push({ t:now, tk, sh, seed:mapSeed, ep:mapEp }); while (recs.length && now - recs[0].t > 20000) recs.shift();
+}
+const canReplay = () => recs.length > 10 && (!me.playing || !me.alive || overAt);
+function startReplay(){ if (!canReplay()){ addFeed(me.playing && me.alive ? 'Il replay si guarda da colpito o a fine partita (R)' : 'Ancora niente da rivedere'); return; }
+  const f = recs.filter(r => r.seed === mapSeed && r.ep === mapEp); if (f.length < 10){ addFeed('Ancora niente da rivedere'); return; }
+  replay = { f, i:0, sp:1 }; $('rp').hidden = false; }
+function stopReplay(){ replay = null; $('rp').hidden = true; }
+function replayStep(dt){ if (!replay) return; replay.i += dt*10*replay.sp; if (replay.i >= replay.f.length - 1){ replay.i = replay.f.length - 1; replay.sp = 0; }
+  $('rpbar').style.width = (100*replay.i/(replay.f.length - 1)).toFixed(1) + '%'; $('rpt').textContent = 'Replay ' + (replay.sp ? (replay.sp === 1 ? '' : '×' + replay.sp) : 'in pausa'); }
+function drawReplay(cw, ch, now){
+  const R0 = replay, k = Math.floor(R0.i), u = R0.i - k, A = R0.f[k], B = R0.f[Math.min(k+1, R0.f.length-1)];
+  const sc = clamp(Math.min(cw/1100, ch/740), .5, 1.25), vw = cw/sc, vh = ch/sc;
+  const lerp = (a,b) => a + (b-a)*u, lerpA = (a,b) => a + angDiff(b,a)*u;
+  const tanks = A.tk.map(t => { const n = B.tk.find(q => q[0] === t[0]); return n ? [t[0], lerp(t[1],n[1]), lerp(t[2],n[2]), lerpA(t[3],n[3]), t[4], t[5], t[6], lerp(t[7],n[7]), t[8], t[9]] : t; });
+  const mine = tanks.find(t => t[8]), cx = mine ? mine[1] : W/2, cy = mine ? mine[2] : H/2;
+  const camx = vw >= W+80 ? W/2 : clamp(cx, vw/2-40, W-vw/2+40), camy = vh >= H+80 ? H/2 : clamp(cy, vh/2-40, H-vh/2+40);
+  ctx.save(); ctx.translate(cw/2,ch/2); ctx.scale(sc,sc); ctx.translate(-camx,-camy);
+  ctx.fillStyle = '#a58ef0'; rr(-16,-16,W+32,H+32,38); ctx.fill(); ctx.fillStyle = FLOORS[floorT][0]; rr(0,0,W,H,26); ctx.fill();
+  if (mode === 'ctf'){ basePad(0); basePad(1); }
+  if (mode === 'koth' && hill) hillDraw(now);
+  pads.forEach((pr,k) => pr.forEach(p => padDraw(p,now,k))); walls.forEach(block);
+  for (const b of A.sh) bullet({ x:b[0] + b[2]*u*.1, y:b[1] + b[3]*u*.1, vx:b[2], vy:b[3], f:b[4] }, now);
+  for (const t of tanks) tank(t[1], t[2], t[3], th(t[4], t[5]), t[6], { tm:t[5], rb:!!t[9], me:!!t[8], el:t[7]/PH, tread:0, seed:0 }, now);
+  ctx.restore();
+  ctx.fillStyle = 'rgba(43,24,70,.5)'; ctx.fillRect(0, 0, cw, 6); ctx.fillRect(0, ch-6, cw, 6);
+}
 const EDT = [['0','Muro viola'],['1','Blocco rosa'],['2','Piattaforma gialla'],['x','Gomma']];
 function openEditor(){
   editing = { tool:'0', sym:true, rects:walls.map(w => w.slice()), undo:[], drag:null };
@@ -2051,6 +2097,7 @@ function frame(t){
   const dt = Math.min(.05, (t-last)/1000) || .016; last = t;
   padPoll(); if (eco) parts.length = 0;
   if (tut) tutStep(t);
+  record(t); replayStep(dt);
   netRead(); adjustBots(); netSmooth(dt); buildTargets();
   updateMe(dt,t); bots.forEach(b => updateBot(b,dt,t));
   { const want = me.playing && (fogOn() || (me.alive && fxOn('dim'))) ? 1 : 0, prev = me.v3 || 0; me.v3 = clamp(prev + clamp(want - prev, -dt*1.8, dt*1.8), 0, 1);
@@ -2088,6 +2135,14 @@ addEventListener('keydown', e => { audioInit(); if (e.target.closest && e.target
   if (spec && !me.playing){
     if (['ArrowRight','ArrowLeft','KeyD','KeyA'].includes(e.code)){ spec.i += /Right|KeyD/.test(e.code) ? 1 : -1; e.preventDefault(); return; }
     if (e.code === 'Enter' || e.code === 'Escape'){ stopWatch(); e.preventDefault(); return; } }
+  if (replay){ e.preventDefault();
+    if (e.code === 'Escape' || e.code === 'KeyR') stopReplay();
+    else if (e.code === 'ArrowLeft') replay.i = Math.max(0, replay.i - 20);
+    else if (e.code === 'ArrowRight') replay.i = Math.min(replay.f.length - 1, replay.i + 20);
+    else if (e.code === 'Space'){ replay.sp = replay.sp ? 0 : 1; if (replay.i >= replay.f.length - 1) replay.i = 0; }
+    else if (e.code === 'ArrowUp') replay.sp = replay.sp === 2 ? .5 : replay.sp === 1 ? 2 : 1;
+    return; }
+  if (e.code === 'KeyR' && !e.shiftKey && !e.repeat && !KM.KeyR){ startReplay(); return; }
   if (tut && e.code === 'Escape'){ endTut('Prova guidata interrotta'); return; }
   const act = KM[e.code];
   if (act === 'q'){ if (!e.repeat) dropFlag(); e.preventDefault(); return; }
@@ -2159,6 +2214,8 @@ function boot(d){
   for (const [h,c,set,what] of [['sz','c-sz',setSz,'cambiarne la dimensione'],['md','c-md',setMode,'cambiare modalità'],['vw','c-vw',setVw,'cambiare la vista'],['wx','c-wx',setWx,'cambiare il meteo'],['fe','c-fe',setFe,'cambiare la partita'],['bo','c-bo',setBo,'cambiare la partita']])
     for (const id of [h,c]) $(id).addEventListener('change', e => { if (id === h) e.target.blur(); if (canSteer()) set(e.target.value); else { addFeed('Entra nell\'arena per ' + what); syncUI(); } });
   for (const id of ['tm','c-tm']) $(id).addEventListener('change', e => { if (id === 'tm') e.target.blur(); setTeamPref(e.target.value); });
+  $('rpb').addEventListener('click', e => { e.currentTarget.blur(); startReplay(); });
+  $('rpx').addEventListener('click', stopReplay);
   $('again').addEventListener('click', e => { e.currentTarget.blur(); if (canSteer()) rollMap((me.playing ? me.name : 'Qualcuno') + ' chiede la rivincita'); });
   $('arbtn').addEventListener('click', e => { e.currentTarget.blur(); arenasSig = ''; renderArenas(); spec = null; $('start').hidden = false; });
   $('watch').addEventListener('click', startWatch);

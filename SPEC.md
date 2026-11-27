@@ -240,6 +240,13 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   del cannone, bagliore dei colpi e dei fantasmi; gli invisibili non hanno luce. La minimappa mostra solo ciò che è entro
   440 (e la squadra); il radar resta un radar. Nella nebbia: raggio ×0,8 e nebbia più scura.
 
+## v17 — Replay (iterazione extra 2)
+- Registrazione locale a 10 istantanee al secondo degli ultimi 20 s (carri visibili con posizione, cannone, quota, squadra,
+  coniglio; colpi con velocità e tipo). Niente in rete: ognuno rivede ciò che ha visto.
+- Si apre con R da colpito, a fine partita o da fuori gioco, o con "Rivedi gli ultimi 20 s" nel riquadro di fine partita.
+  Vista 2D con la telecamera su di te, interpolazione tra istantanee; Spazio pausa, ←/→ ±2 s, ↑ velocità 0,5/1/2, Esc esce.
+  Il gioco intanto continua; una mappa nuova azzera ciò che si può rivedere.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

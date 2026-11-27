@@ -21,6 +21,7 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
   telecamera alle spalle del carro, vista ridotta attorno a te, carri e colpi più veloci e la bolla «Faro» che allarga la vista.
 - Una bandierina buona dura finché la lasci (Q) o al massimo 30 secondi. Quelle «?» possono essere cattive (comandi invertiti,
   lumaca, grilletto facile, radar in tilt, occhiali appannati) e restano attaccate 10 secondi. Ogni bandierina torna al suo posto.
+- Replay degli ultimi 20 secondi (R da colpito o a fine partita).
 - Meteo: sereno, vento (i colpi deviano) o notte (si vede solo con i fari).
 - Editor di arene: disegni la mappa, la giochi con chi è nell'arena e la condividi con un codice.
 - Prova guidata di un minuto, modalità spettatore, controller, tasti riassegnabili e basso consumo (dalla schermata iniziale).
