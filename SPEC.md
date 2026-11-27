@@ -257,6 +257,19 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - Otto cappellini (fiocco libero; corona, elica, aureola, antenne, cappello da mago, cilindro, stellina sbloccati dai trofei),
   scelti nella schermata iniziale (`kw.hat`) e visibili a tutti (presence `ht`).
 
+## v19 — Prova a tappeto e correzioni
+- Provate 144 combinazioni (6 modalità × 2 viste × 3 meteo × 4 dimensioni) con input casuale e azioni forzate (bandierine
+  di ogni tipo, salti sulle piattaforme, colpi mirati), 12 partite in rete a tre, cambi di impostazioni a partita in corso,
+  bordi (editor, prova guidata, spettatore, telefono), prestazioni con CPU rallentata ×4.
+- Correzioni: la presence si fonde campo per campo, quindi lo stato di gioco manda sempre `sp:0`; chi passa a spettatore
+  manda `sp:1` ed esce dalla partita degli altri (prima restava un carro morto). La prova guidata parte con meteo sereno e
+  senza arena personalizzata. I blocchi dell'editor sopra una base non vengono messi (lo dice l'editor). Telefono: fascia
+  in alto da sola, classifica e minimappa sotto (5 righe), radar sopra i pulsanti a destra.
+- Prestazioni: muri e bandierine fuori schermo non si disegnano (2D) o si scartano prima (2.5D, anche oltre 2600 di
+  profondità); nebbia in due gradini; puntini del pavimento più vicini e semplici; luci notturne a un terzo della
+  risoluzione e ridisegnate al massimo 30 volte al secondo; densità di pixel che scende da sola (2 → 1,5 → 1) se i
+  fotogrammi restano lenti per 3 s.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

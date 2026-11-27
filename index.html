@@ -102,6 +102,7 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .pill.on i{background:#7ff0b0}
 .stage{position:relative;flex:1;min-height:0;margin:0 max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));border-radius:22px;overflow:hidden;background:#3d2563;box-shadow:inset 0 0 0 4px #4a2e75}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+@media(max-width:600px){#board{top:52px!important;right:8px!important;max-width:205px;min-width:0!important;font-size:12px!important}#clk{top:8px!important;font-size:13px!important;padding:3px 10px!important}}
 #board{position:absolute;top:12px;right:12px;background:var(--panel);border-radius:16px;padding:8px 12px;min-width:180px;font-size:14px}
 #board .row{display:grid;grid-template-columns:12px minmax(0,1fr) 2.4ch 2.4ch;gap:8px;align-items:center}
 #board .hd{color:var(--lilac);font-size:13px}
@@ -449,7 +450,9 @@ function connected(list){
   return seen === total;
 }
 function genMap(seed){
-  if (customMap){ const d = decodeMap(customMap); if (d && d.size === sz) return withFeatures(d.rects, 0, prng(strHash(customMap)), false); }
+  if (customMap){ const d = decodeMap(customMap);
+    /* blocks on a base would bury the flag and the spawn: they are left out */
+    if (d && d.size === sz) return withFeatures(d.rects.filter(r => BASES.every(b => Math.hypot(clamp(b.x, r[0], r[0]+r[2]) - b.x, clamp(b.y, r[1], r[1]+r[3]) - b.y) > 80)), 0, prng(strHash(customMap)), false); }
   if (seed === 0 && sz === 'S') return withFeatures(CLASSIC, 0, prng(777), false);
   const af = SIZES[sz], rng = prng((seed || 1) + (af > 1 ? Math.round(af*1000) : 0)), r = (a,b) => a + rng()*(b-a), snap = v => Math.round(v/10)*10, MID = W/2 - 40, GAP = 80;
   for (let attempt = 0; attempt < 40; attempt++){
@@ -1160,7 +1163,7 @@ function netRead(){
   for (const p of ps){
     if (p.sameTab){ myPeer = p.peer; continue; }
     if (p.kind !== 'viewer') continue;
-    const pr = p.presence; if (!pr || pr.v !== 1) continue;
+    const pr = p.presence; if (!pr || pr.v !== 1 || pr.sp === 1) continue;
     const key = 'p' + san(p.peer); seen.add(key);
     let r = remotes.get(key), fresh = false;
     if (!r){ r = { key, rx:0, ry:0, ra:0, src:null, kb:{}, bk:{}, bul:[], bc:[], tread:0, alive:false, fx:'' }; remotes.set(key,r); fresh = true; }
@@ -1548,14 +1551,14 @@ function netSmooth(dt){
   }
 }
 function state(){
-  return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
+  return { v:1, sp:0, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
     al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, ht:hat, wx, cm:customMap || null, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
     bt:isHost ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
     bb:isHost ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
     fl:mode === 'ctf' ? flags.map(f => [f.v, f.s, r1(f.x), r1(f.y), f.h]) : null, sc:mode === 'ctf' ? score : null };
 }
-function sendNow(){ if (arena && me.playing) arena.presence(state()).catch(() => {}); }
+function sendNow(){ if (!arena) return; if (me.playing) arena.presence(state()).catch(() => {}); else if (spec && spec.left){ spec.left = false; arena.presence({ v:1, sp:1 }).catch(() => {}); } }
 function netSend(now){ if (now - lastSend >= 66){ lastSend = now; sendNow(); } }
 
 /* ---------- drawing ---------- */
@@ -1677,15 +1680,18 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
   ctx.fillStyle = '#a58ef0'; if (poly([Q(-16,-16,0),Q(W+16,-16,0),Q(W+16,H+16,0),Q(-16,H+16,0)])) ctx.fill();
   ctx.fillStyle = FLOORS[floorT][0]; if (poly([Q(0,0,0),Q(W,0,0),Q(W,H,0),Q(0,H,0)])) ctx.fill();
   ctx.fillStyle = FLOORS[floorT][1];
-  for (let y = Math.max(30, Math.floor((cy-1500)/60)*60+30); y < Math.min(H, cy+1500); y += 60) for (let x = Math.max(30, Math.floor((cx-1500)/60)*60+30); x < Math.min(W, cx+1500); x += 60){
+  for (let y = Math.max(30, Math.floor((cy-1100)/60)*60+30); y < Math.min(H, cy+1100); y += 60) for (let x = Math.max(30, Math.floor((cx-1100)/60)*60+30); x < Math.min(W, cx+1100); x += 60){
     const xx = x + ((y/60)%2 ? 30 : 0), p = P(xx,y,0); if (!p || p.x < -10 || p.x > cw+10 || p.y < -10 || p.y > ch+10) continue;
-    ell(p.x, p.y, 5*p.k, 5*p.k*se); }
+    if (p.k < .3) continue; if (p.k < .6) ctx.fillRect(p.x - 4*p.k, p.y - 3*p.k*se, 8*p.k, 6*p.k*se); else ell(p.x, p.y, 5*p.k, 5*p.k*se); }
   if (mode === 'ctf') for (let i = 0; i < 2; i++) ground(BASES[i].x, BASES[i].y, () => basePad(i));
   if (mode === 'koth' && hill) ground(hill.x, hill.y, () => hillDraw(now));
   pads.forEach((pr,k) => pr.forEach(p => ground(p.x, p.y, () => padDraw(p,now,k))));
   const items = [];
   for (const w of walls){ const ds = [dep(w[0],w[1]), dep(w[0]+w[2],w[1]), dep(w[0],w[1]+w[3]), dep(w[0]+w[2],w[1]+w[3])];
-    if (Math.max(...ds) > 0) items.push({ k:-Math.min(...ds), f:() => box(w) }); }
+    if (Math.max(...ds) <= 0 || Math.min(...ds) > 2600) continue;
+    const ps = [P(w[0],w[1],0), P(w[0]+w[2],w[1],0), P(w[0],w[1]+w[3],0), P(w[0]+w[2],w[1]+w[3],0)];
+    if (ps.every(p => p) && (ps.every(p => p.x < -80) || ps.every(p => p.x > cw + 80) || ps.every(p => p.y > ch + 80))) continue;
+    items.push({ k:-Math.min(...ds), f:() => box(w) }); }
   for (let s = 0; s < slots.length; s++){ const sl = slots[s]; items.push({ k:-dep(sl.x,sl.y), f:() => bill(sl.x, sl.y, 0, () => bubble(s,now)) }); }
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s !== 1){ const f = flags[i]; items.push({ k:-dep(f.x,f.y), f:() => bill(f.x, f.y, 0, () => flagIcon(f.x, f.y, i, now, 1)) }); }
   const pn = performance.now();
@@ -1718,8 +1724,9 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
   if (wx === 'night'){
     /* night in 2.5D: a dark layer with the lights cut out on the ground, in perspective */
     if (!lightC) lightC = document.createElement('canvas');
-    if (lightC.width !== cw || lightC.height !== ch){ lightC.width = cw; lightC.height = ch; }
-    const l = lightC.getContext('2d');
+    if (lightC.width !== Math.ceil(cw/3) || lightC.height !== Math.ceil(ch/3)){ lightC.width = Math.ceil(cw/3); lightC.height = Math.ceil(ch/3); lightAt = 0; }
+    const l = lightC.getContext('2d'); l.setTransform(1/3,0,0,1/3,0,0);
+    if (now - lightAt > 33){ lightAt = now;
     l.globalCompositeOperation = 'source-over'; l.clearRect(0,0,cw,ch); l.fillStyle = 'rgba(14,6,36,.84)'; l.fillRect(0,0,cw,ch);
     l.globalCompositeOperation = 'destination-out';
     const glow = (x,y,z,r,al) => { const p = P(x,y,z); if (!p) return; const rr = r*p.k, g = l.createRadialGradient(p.x,p.y,0,p.x,p.y,rr);
@@ -1738,12 +1745,12 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     for (const b of rbots.values()) if (b.alive && !(b.fx || '').includes('g') && seen(b.rx, b.ry, b.tm)) lamp(b.rx, b.ry, b.ra, b.el ? PH : 0, false);
     for (const list of [me.bullets, ...bots.map(b => b.bullets), ...[...rbots.values()].map(b => b.bc), ...[...remotes.values()].map(r => r.bc)])
       for (const b of list) if (!(b.f & (LASER|SHOCK)) && seen(b.x, b.y, -2)) glow(b.x, b.y, (b.z || (b.f & 4 ? PH : 0)) + 14, 45, .9);
-    for (const g of ghosts) if (seen(g.x, g.y, -2)) glow(g.x, g.y, 20, 60, .6);
+    for (const g of ghosts) if (seen(g.x, g.y, -2)) glow(g.x, g.y, 20, 60, .6); }
     ctx.drawImage(lightC, 0, 0, cw, ch);
   }
   if (fog){
     /* fog of war: the ground beyond the sight radius darkens in steps; tanks and shots out there are not drawn at all */
-    for (const [f,a] of [[1,.2],[1.1,.2],[1.22,.2],[1.36,.22]]){
+    for (const [f,a] of [[1,.36],[1.25,.4]]){
       ctx.beginPath(); ctx.rect(0,0,cw,ch);
       const ring = []; for (let i = 0; i < 56; i++){ const t = i/56*Math.PI*2; ring.push(Q(me.x + Math.cos(t)*FR*f, me.y + Math.sin(t)*FR*f, 0)); }
       trace(ring); ctx.fillStyle = 'rgba(28,12,48,' + (wx === 'night' ? a*.6 : a) + ')'; ctx.fill('evenodd'); }
@@ -1785,11 +1792,12 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     if (w[4] === 1 && w[2] >= 60 && (Cw.y > y1 || Cw.y < y0)){ const f = P((x0+x1)/2, Cw.y > y1 ? y1 : y0, h*.5); if (f){ ctx.save(); ctx.translate(f.x,f.y); ctx.scale(f.k*1.3, f.k*1.3); face(0,9,false); ctx.restore(); } }
   }
 }
-let lightC = null;
+let lightC = null, lightAt = 0;
 function nightLayer(cw, ch, sc, camx, camy){
   if (!lightC) lightC = document.createElement('canvas');
-  if (lightC.width !== cw || lightC.height !== ch){ lightC.width = cw; lightC.height = ch; }
-  const l = lightC.getContext('2d'), S = (x,y) => [cw/2 + (x-camx)*sc, ch/2 + (y-camy)*sc];
+  if (lightC.width !== Math.ceil(cw/3) || lightC.height !== Math.ceil(ch/3)){ lightC.width = Math.ceil(cw/3); lightC.height = Math.ceil(ch/3); lightAt = 0; }
+  const l = lightC.getContext('2d'), S = (x,y) => [cw/2 + (x-camx)*sc, ch/2 + (y-camy)*sc]; l.setTransform(1/3,0,0,1/3,0,0);
+  const now = performance.now(); if (now - lightAt < 33){ ctx.drawImage(lightC, 0, 0, cw, ch); return; } lightAt = now;
   l.globalCompositeOperation = 'source-over'; l.clearRect(0,0,cw,ch); l.fillStyle = 'rgba(14,6,36,.86)'; l.fillRect(0,0,cw,ch);
   l.globalCompositeOperation = 'destination-out';
   const glow = (x,y,r,al) => { const [px,py] = S(x,y), g = l.createRadialGradient(px,py,0,px,py,r*sc); g.addColorStop(0,'rgba(0,0,0,' + al + ')'); g.addColorStop(1,'rgba(0,0,0,0)'); l.fillStyle = g; l.beginPath(); l.arc(px,py,r*sc,0,Math.PI*2); l.fill(); };
@@ -1894,7 +1902,7 @@ function bubble(s,now){
   ctx.lineWidth = 4; ctx.strokeStyle = '#fff6fb'; ctx.strokeText(label, sl.x, sl.y+24); ctx.fillStyle = '#2b1846'; ctx.fillText(label, sl.x, sl.y+24);
 }
 function draw(now){
-  const cw = cv.clientWidth, ch = cv.clientHeight, dpr = eco ? 1 : Math.min(2, window.devicePixelRatio || 1);
+  const cw = cv.clientWidth, ch = cv.clientHeight, dpr = eco ? 1 : Math.min(dprCap, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = '#3d2563'; ctx.fillRect(0,0,cw,ch);
   if (editing){ drawEditor(cw, ch); return; }
@@ -1915,8 +1923,10 @@ function draw(now){
   if (mode === 'ctf'){ basePad(0); basePad(1); }
   if (mode === 'koth' && hill) hillDraw(now);
   pads.forEach((pr,k) => pr.forEach(p => padDraw(p,now,k)));
-  walls.forEach(block);
-  for (let s = 0; s < slots.length; s++) bubble(s,now);
+  /* only what is on screen: in XL most of the arena is outside the view */
+  const vx0 = camx - vw/2 - 90, vx1 = camx + vw/2 + 90, vy0 = camy - vh/2 - 90, vy1 = camy + vh/2 + 90, onScr = (x,y,w,h) => x < vx1 && x + w > vx0 && y < vy1 && y + h > vy0;
+  for (const w of walls) if (onScr(w[0], w[1], w[2], w[3])) block(w);
+  for (let s = 0; s < slots.length; s++) if (onScr(slots[s].x - 40, slots[s].y - 60, 80, 100)) bubble(s,now);
   if (mode === 'ctf') for (let i = 0; i < 2; i++) if (flags[i].s !== 1) flagIcon(flags[i].x, flags[i].y, i, now, 1);
   ghosts.forEach(g => ghost(g,now));
   me.bullets.forEach(b => bullet(b,now)); bots.forEach(t => t.bullets.forEach(b => bullet(b,now))); rbots.forEach(t => t.bc.forEach(b => bullet(b,now))); remotes.forEach(r => r.bc.forEach(b => bullet(b,now)));
@@ -1945,8 +1955,11 @@ function corner(cw, ch){
   const mw = cw < 600 ? 110 : 150, bottom = ch - (coarse.matches ? 134 : 12), rd = cw < 600 ? 104 : 136, right = cw - (coarse.matches ? 100 : 12);
   if (fxOn('jam')){ ctx.fillStyle = 'rgba(43,24,70,.82)'; rr(right - 150, bottom - 40, 150, 40, 12); ctx.fill(); ctx.font = '600 14px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffd84a'; ctx.fillText('Radar in tilt ' + '▒░▓'[Math.floor(performance.now()/120) % 3], right - 75, bottom - 20); return; }
-  if (showRadar) radar(right - rd/2 - 6, bottom - rd/2 - 6, rd/2);
-  if (showMini) minimap(12, 12, mw);
+  if (showRadar){
+    if (coarse.matches){ const er = $('emo').getBoundingClientRect(), cr = cv.getBoundingClientRect(), r = (cw < 600 ? 92 : rd)/2;
+      radar(cw - 12 - r - 6, Math.max(r + 60, er.top - cr.top - r - 18), r); }
+    else radar(right - rd/2 - 6, bottom - rd/2 - 6, rd/2); }
+  if (showMini) minimap(12, cw < 600 ? 52 : 12, mw);
 }
 /* who you may see: in the fog only what is in sight, your team, and yourself */
 const inSight = (x,y,tm) => !((fogOn() || wx === 'night') && me.playing) || Math.hypot(x - me.x, y - me.y) < (fogOn() ? fogR() : 440) || (teamMode() && tm === team);
@@ -2023,7 +2036,7 @@ function hud(now){
     if (wx === 'wind') t += ' · vento ' + '→↘↓↙←↖↑↗'[Math.round(((Math.atan2(wind.y, wind.x) + Math.PI*2) % (Math.PI*2)) / (Math.PI/4)) % 8];
     if (wx === 'night') t += ' · notte';
     $('clk').textContent = t; }
-  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', teamMode() ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, teamMode() ? p.tm : -1)));
+  $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0, matchMedia('(max-width:600px)').matches ? 5 : 10).map(p => row(p.me ? 'me' : '', teamMode() ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, teamMode() ? p.tm : -1)));
   const n = remotes.size + (me.playing ? 1 : 0);
   $('pill').classList.toggle('on', net === 'on');
   $('lvw').hidden = !(isHost && bots.length);
@@ -2049,11 +2062,13 @@ function renderFeed(){ $('feed').replaceChildren(...feed.map(f => { const d = do
 
 /* ---------- loop ---------- */
 let last = performance.now();
-let eco = store.get('kw.eco') === '1', spec = null, tut = null;
+let dprCap = 2, slowT = 0, eco = store.get('kw.eco') === '1', spec = null, tut = null;
 /* spectator: follow any tank still in the game, without joining it */
 function watchList(){ const l = []; for (const r of remotes.values()) if (r.alive) l.push({ x:r.rx, y:r.ry, n:r.name }); for (const b of bots) if (b.alive) l.push({ x:b.x, y:b.y, n:b.name }); for (const b of rbots.values()) if (b.alive) l.push({ x:b.rx, y:b.ry, n:b.name }); return l; }
 function watched(){ const l = watchList(); if (!l.length) return null; const i = ((spec.i % l.length) + l.length) % l.length; return l[i]; }
-function startWatch(){ spec = { i:0 }; $('start').hidden = true; addFeed('Modalità spettatore: ←/→ cambia carro, Invio per giocare'); }
+function startWatch(){
+  const was = me.playing; spec = { i:0, left:was };
+  if (was){ dropMine(); me.playing = false; me.alive = false; me.bullets = []; me.fx = {}; me.hs = -1; if (tut) endTut(); sendNow(); $('play').textContent = 'Entra nell\'arena'; } $('start').hidden = true; addFeed('Modalità spettatore: ←/→ cambia carro, Invio per giocare'); }
 function stopWatch(){ spec = null; $('start').hidden = false; }
 /* arena editor: drag to draw blocks on a 10 px grid, optional left-right mirror, share as a code */
 let editing = null;
@@ -2103,7 +2118,8 @@ function closeEditor(){ editing = null; $('editor').hidden = true; $('start').hi
 function edUI(){
   for (const b of $('edtools').children) b.setAttribute('aria-pressed', String(b.dataset.t === editing.tool));
   $('edsym').setAttribute('aria-pressed', String(editing.sym)); $('edsym').textContent = 'Simmetria ' + (editing.sym ? 'sì' : 'no');
-  $('edn').textContent = editing.rects.length + ' blocchi · arena ' + sz;
+  const onBase = editing.rects.filter(r => BASES.some(b => Math.hypot(clamp(b.x, r[0], r[0]+r[2]) - b.x, clamp(b.y, r[1], r[1]+r[3]) - b.y) <= 80)).length;
+  $('edn').textContent = editing.rects.length + ' blocchi · arena ' + sz + (onBase ? ' · ' + onBase + ' sulle basi (non verranno messi)' : '');
 }
 function edView(cw, ch){ const k = Math.min((cw-40)/W, (ch-40)/H); return { k, ox:(cw - W*k)/2, oy:(ch - H*k)/2 }; }
 function edPoint(e){ const r = cv.getBoundingClientRect(), v = edView(cv.clientWidth, cv.clientHeight); return { x:clamp(Math.round(((e.clientX - r.left - v.ox)/v.k)/10)*10, 0, W), y:clamp(Math.round(((e.clientY - r.top - v.oy)/v.k)/10)*10, 0, H) }; }
@@ -2156,7 +2172,7 @@ const TUT = ['1/5 · Muoviti: avanti, indietro e gira (W A S D o frecce)', '2/5 
 function startTut(){
   if (remotes.size){ addFeed('La prova guidata si fa da soli: apri un\'arena nuova'); return; }
   me.name = $('nick').value.trim().slice(0,16) || $('nick').placeholder;
-  loadMap(newSeed(), Math.max(1,mapEp) + 1, 'Prova guidata', 'ffa', bo, 'S', 'k10', 0, '2d');
+  loadMap(newSeed(), Math.max(1,mapEp) + 1, 'Prova guidata', 'ffa', bo, 'S', 'k10', 0, '2d', '', 'clear');
   tut = { step:0, x:0, y:0, shots:0, k0:0, at:0 };
   $('form').requestSubmit(); tut.x = me.x; tut.y = me.y; $('tut').hidden = false;
 }
@@ -2174,6 +2190,8 @@ function tutStep(now){
 function frame(t){
   if (eco && t - last < 30){ requestAnimationFrame(frame); return; }   // low power: about 30 frames a second
   const dt = Math.min(.05, (t-last)/1000) || .016; last = t;
+  if (!eco && !document.hidden){ slowT = dt > .024 ? slowT + dt : Math.max(0, slowT - dt*.5);
+    if (slowT > 3 && dprCap > 1){ dprCap = dprCap > 1.5 ? 1.5 : 1; slowT = 0; if (dprCap === 1) addFeed('Grafica alleggerita per restare fluida (c\'è anche il basso consumo)'); } }
   padPoll(); if (eco) parts.length = 0;
   if (tut) tutStep(t);
   record(t); replayStep(dt);
