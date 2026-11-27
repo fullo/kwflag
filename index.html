@@ -111,27 +111,29 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   .pill.ok{display:none}
   #board.hide{display:none}
   .mob{display:block}
-  #mmb{position:absolute;top:8px;left:8px;width:44px;height:44px;border-radius:12px;border:2px solid var(--lilac);background:var(--panel);font-size:20px;padding:0;cursor:pointer}
+  #mmb{position:absolute;top:8px;left:8px;width:38px;height:38px;border-radius:10px;border:2px solid var(--lilac);background:var(--panel);font-size:17px;padding:0;cursor:pointer}
   #mmb[aria-pressed=true]{background:var(--star)}
-  #feedb{position:absolute;left:16px;bottom:158px;width:48px;height:48px;border-radius:50%;border:2px solid var(--lilac);background:var(--panel);font-size:22px;padding:0;cursor:pointer}
+  #feedb{position:absolute;left:14px;bottom:126px;width:40px;height:40px;border-radius:50%;border:2px solid var(--lilac);background:var(--panel);font-size:18px;padding:0;cursor:pointer}
   #feedn{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--pink);color:var(--bg);font:700 12px/20px Fredoka,sans-serif;text-align:center;padding:0 4px}
   #feedn[hidden]{display:none}
-  #feed{display:none!important;bottom:214px!important}
+  #feed{display:none!important;bottom:174px!important}
   #feed.open{display:flex!important}
   /* bear paw: a smaller fire pad with emoji toes around it, so the thumb barely moves */
-  #fire{width:76px!important;height:76px!important;right:18px!important;bottom:26px!important;font-size:15px!important}
+  #fire{width:62px!important;height:62px!important;right:14px!important;bottom:20px!important;font-size:13px!important;box-shadow:0 4px 0 #d9a800!important}
+  #stick{width:104px!important;height:104px!important;left:12px!important;bottom:12px!important}
+  #knob{width:42px!important;height:42px!important;margin:-21px!important}
   #emo{display:block!important;position:absolute;right:0;bottom:0;width:0;height:0;flex-direction:initial}
   #emo .ej{display:inline}
   #emo .tx{display:none}
   #emo > button{position:absolute;margin:0}
-  #jumpb,#emob,#dropb{width:48px!important;min-width:0!important;height:48px!important;min-height:0!important;padding:0!important;border-radius:50%!important;font-size:22px!important;line-height:1;background:var(--panel)!important}
-  #jumpb{right:44px;bottom:107px}
-  #emob{right:84px;bottom:84px}
-  #dropb{right:100px;bottom:40px}
+  #jumpb,#emob,#dropb{width:40px!important;min-width:0!important;height:40px!important;min-height:0!important;padding:0!important;border-radius:50%!important;font-size:18px!important;line-height:1;background:var(--panel)!important}
+  #jumpb{right:31px;bottom:99px}
+  #emob{right:77px;bottom:75px}
+  #dropb{right:93px;bottom:25px}
   #dropb[hidden]{display:none}
-  #emo [data-e]{display:none;right:150px;min-width:72px}
+  #emo [data-e]{display:none;right:146px;min-width:60px;min-height:34px!important;font-size:13px!important;padding:2px 10px}
   #emo.open [data-e]{display:block}
-  #emo [data-e="0"]{bottom:182px} #emo [data-e="1"]{bottom:134px} #emo [data-e="2"]{bottom:86px} #emo [data-e="3"]{bottom:38px}
+  #emo [data-e="0"]{bottom:206px} #emo [data-e="1"]{bottom:166px} #emo [data-e="2"]{bottom:126px} #emo [data-e="3"]{bottom:86px}
 }
 #board{position:absolute;top:12px;right:12px;background:var(--panel);border-radius:16px;padding:8px 12px;min-width:180px;font-size:14px}
 #board .row{display:grid;grid-template-columns:12px minmax(0,1fr) 2.4ch 2.4ch;gap:8px;align-items:center}
@@ -1996,7 +1998,7 @@ function corner(cw, ch){
     const open = miniUntil > performance.now(), mw2 = Math.min(cw - 24, 300);
     if (open) minimap(8, 60, mw2);
     $('board').classList.toggle('hide', open); $('mmb').setAttribute('aria-pressed', String(open));
-    if (showRadar && !open) radar(cw - 8 - 46 - 6, 60 + 46 + 6, 46);
+    if (showRadar && !open) radar(cw - 8 - 40 - 6, 54 + 40 + 6, 40);
     return; }
   if (showRadar){
     if (coarse.matches){ const er = $('emo').getBoundingClientRect(), cr = cv.getBoundingClientRect(), r = (cw < 600 ? 92 : rd)/2;
@@ -2304,7 +2306,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden && me.playing && me.alive){ dropMine(); me.alive = false; me.respawnAt = 0; me.bullets = []; sendNow(); }
 });
 const sk = $('stick'), knob = $('knob');
-function stickMove(e){ const r = sk.getBoundingClientRect(); let x = (e.clientX - r.left - r.width/2)/50, y = (e.clientY - r.top - r.height/2)/50; const m = Math.hypot(x,y); if (m > 1){ x /= m; y /= m; } stick.x = x; stick.y = y; knob.style.transform = 'translate(' + x*38 + 'px,' + y*38 + 'px)'; }
+function stickMove(e){ const r = sk.getBoundingClientRect(), u = r.width/2.6; let x = (e.clientX - r.left - r.width/2)/u, y = (e.clientY - r.top - r.height/2)/u; const m = Math.hypot(x,y); if (m > 1){ x /= m; y /= m; } stick.x = x; stick.y = y; knob.style.transform = 'translate(' + x*r.width*.29 + 'px,' + y*r.width*.29 + 'px)'; }
 sk.addEventListener('pointerdown', e => { stick.on = true; sk.setPointerCapture(e.pointerId); stickMove(e); });
 sk.addEventListener('pointermove', e => { if (stick.on) stickMove(e); });
 for (const ev of ['pointerup','pointercancel']) sk.addEventListener(ev, () => { stick.on = false; stick.x = stick.y = 0; knob.style.transform = ''; });

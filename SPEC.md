@@ -279,7 +279,8 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   quando la connessione va bene (i partecipanti si vedono già nella classifica) e torna solo se c'è un problema di rete.
 
 ## v21 — Zampa d'orso (telefono)
-- Bottone di fuoco più piccolo (76 px) e, attorno, i "polpastrelli" a 68 px dal centro: 🦘 salta (sopra), 😊 emote
+- Bottone di fuoco più piccolo (62 px), stick 104 px, icone 38–40 px, radar più piccolo; attorno a Spara i "polpastrelli"
+  da 40 px a 68 px dal centro, distanziati di circa 12 px: 🦘 salta (sopra), 😊 emote
   (in diagonale), 🏳️ lascia la bandierina (a sinistra, solo quando ne porti una). Il pollice resta sulla zampa.
   Le emote si aprono in colonna a sinistra e si richiudono dopo l'invio.
 - Un tocco rapido su Spara ora spara sempre un colpo (prenotato per 350 ms se il cannone si sta ricaricando).
