@@ -159,6 +159,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <button class="tg" id="musb" type="button" aria-pressed="false">Musica no</button>
   <label class="lv" id="szw"><span class="lt">Arena </span><select id="sz"><option value="S">Arena S</option><option value="M">Arena M</option><option value="L">Arena L</option><option value="XL">Arena XL</option></select></label>
   <label class="lv" id="mdw"><span class="lt">Modalità </span><select id="md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="tdm4">Quattro squadre</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
+  <label class="lv" id="wxw"><span class="lt">Meteo </span><select id="wx"><option value="clear">Sereno</option><option value="wind">Vento</option><option value="night">Notte</option></select></label>
   <label class="lv" id="vww"><span class="lt">Vista </span><select id="vw"><option value="2d">Vista 2D</option><option value="fog">Vista nebbia</option></select></label>
   <label class="lv" id="tmw" hidden><span class="lt">Squadra </span><select id="tm"><option value="auto">Squadra casuale</option><option value="0">Squadra Arancio ★</option><option value="1">Squadra Blu ♥</option><option value="2">Squadra Verde ◆</option><option value="3">Squadra Viola ●</option></select></label>
   <label class="lv" id="few"><span class="lt">Partita </span><select id="fe"><option value="k10">primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
@@ -202,6 +203,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
         <label class="o"><span>Arena</span><select id="c-sz"><option value="S">S</option><option value="M">M (+50%)</option><option value="L">L (+150%)</option><option value="XL">XL (+500%)</option></select></label>
         <label class="o"><span>Modalità</span><select id="c-md"><option value="ffa">Tutti contro tutti</option><option value="ctf">Cattura la bandiera</option><option value="tdm4">Quattro squadre</option><option value="koth">Re della collina</option><option value="rabbit">Caccia al coniglio</option><option value="waves">Ondate di bot</option></select></label>
         <label class="o"><span>Vista</span><select id="c-vw"><option value="2d">2D dall'alto</option><option value="fog">2.5D nella nebbia</option></select></label>
+        <label class="o"><span>Meteo</span><select id="c-wx"><option value="clear">Sereno</option><option value="wind">Vento (i colpi deviano)</option><option value="night">Notte (solo fari)</option></select></label>
         <label class="o" id="c-few"><span>Fine partita</span><select id="c-fe"><option value="k10">Primo a 10 colpi</option><option value="t3">3 minuti</option><option value="t5">5 minuti</option><option value="t9">9 minuti</option></select></label>
         <label class="o" id="c-bow" hidden><span>Fine partita</span><select id="c-bo"><option value="3">Al meglio di 3</option><option value="5">Al meglio di 5</option><option value="11">Al meglio di 11</option></select></label>
         <label class="o" id="c-tmw" hidden><span>Squadra</span><select id="c-tm"><option value="auto">Casuale</option><option value="0">Arancio ★</option><option value="1">Blu ♥</option><option value="2">Verde ◆</option><option value="3">Viola ●</option></select></label>
@@ -223,6 +225,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
         <p>Tastiera: WASD o frecce per guidare, Spazio per sparare, Tab per saltare, Q per lasciare la bandierina, tasti 1-4 per le emote. Maiusc+M mostra o nasconde la minimappa, Maiusc+R il radar. Telefono: stick a sinistra, bottone a destra.</p>
         <p>Un colpo e torni dopo 3 secondi. Le bandierine danno poteri: ne porti una alla volta, fino a 30 secondi o finché la lasci con Q. Quelle «?» possono essere buone o cattive (comandi invertiti, lumaca, grilletto facile, radar in tilt, occhiali appannati): le cattive restano attaccate 10 secondi. I vortici viola ti teletrasportano. Sui blocchi gialli si sale dalle rampe ai due capi.</p>
         <p>Modalità: tutti contro tutti; cattura la bandiera a squadre; quattro squadre (arancio ★, blu ♥, verde ◆, viola ●: vince la prima a 20 colpi); re della collina (resta da solo nel cerchio giallo: vince chi arriva a 60 secondi); caccia al coniglio (tutti contro il coniglio, chi lo colpisce diventa il coniglio; un punto per ogni colpo); ondate di bot (tutti insieme contro ondate sempre più forti, con vite in comune).</p>
+        <p>Meteo: col vento i colpi deviano (la freccia in alto dice da dove soffia); di notte vedi solo quello che illuminano i fari.</p>
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
       </div>
@@ -270,6 +273,9 @@ let mode = 'ffa', team = 0, teamPref = 'auto', bo = 3, overAt = 0, fe = 'k10', m
 let vw = '2d', camYaw = -Math.PI/2, showMini = true, showRadar = true;
 const VIEWS = { '2d':'2D dall\'alto', fog:'2.5D nella nebbia' };
 const FOGR = 430, FOGR2 = 720, RADR = 950;
+/* weather, part of the arena like the view: clear, wind (shots drift), night (headlights in the dark) */
+const WEATHERS = { clear:'Sereno', wind:'Vento', night:'Notte' };
+let wx = 'clear', wind = { x:0, y:0 };
 const fogOn = () => vw === 'fog', SPD = () => vw === 'fog' ? 1.35 : 1;
 /* bots live on one browser (the host); everyone else renders them from the host's presence */
 let isHost = true, rbots = new Map(), lastBt = null, botSeq = 0, hostSrc = null, tgts = [];
@@ -315,7 +321,7 @@ const LASER = 8, MISSILE = 16, SHOCK = 32;
 /* heights for the 2.5D view: yellow blocks (style 2) are platforms you can climb with 'Salto 3D' */
 const PH = 36, WH = 56, ELZ = PH/2, isPlat = w => w[4] === 2;
 const canClimb = () => fogOn() || fxOn('dim');
-const fogR = () => fxOn('blind') ? 200 : fxOn('dim') ? FOGR2 : FOGR;
+const fogR = () => (fxOn('blind') ? 200 : fxOn('dim') ? FOGR2 : FOGR) * (wx === 'night' ? .8 : 1);
 /* platforms have a ramp at each end of their long side, inside the block's own footprint */
 const rampLen = w => Math.min(48, Math.max(w[2], w[3]) / 3);
 function rampZ(w,x,y){
@@ -872,6 +878,7 @@ function guide(b,tm,dt){
 function stepBullets(list,dt){
   for (let i = list.length-1; i >= 0; i--){ const b = list[i], ox = b.x, oy = b.y;
     if (b.f & (LASER|SHOCK)){ if (b.f & SHOCK) b.vx += 420*dt; if ((b.life -= dt) <= 0) list.splice(i,1); continue; }
+    if (wx === 'wind'){ b.vx += wind.x*dt; b.vy += wind.y*dt; }
     if (b.f & MISSILE){ guide(b, team, dt); if (Math.random() < .5) parts.push({ x:b.x, y:b.y, vx:0, vy:0, life:.35, max:.35, c:'#ffd0f4', sh:2, r:4, rot:0 }); }
     b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
     if (b.life <= 0){ puff(b.x,b.y); list.splice(i,1); continue; }
@@ -1067,7 +1074,7 @@ function settleTeam(){
   syncUI(); sendNow();
 }
 function lobbyPub(){
-  if (room && arena && arena !== room) room.presence({ v:2, n:me.name || '', a:arenaCode, md:mode, sz, vw, pl:me.playing ? 1 : 0 }).catch(() => {});
+  if (room && arena && arena !== room) room.presence({ v:2, n:me.name || '', a:arenaCode, md:mode, sz, vw, wx, pl:me.playing ? 1 : 0 }).catch(() => {});
 }
 function lobbyArenas(){
   if (!room) return [];
@@ -1075,7 +1082,7 @@ function lobbyArenas(){
   const m = new Map();
   for (const p of ps){
     const pr = p.presence; if (!pr || pr.v !== 2 || typeof pr.a !== 'string' || !/^[a-z0-9]{4,12}$/.test(pr.a)) continue;
-    const e = m.get(pr.a) || { code:pr.a, n:0, pl:0, md:pmd(pr.md), sz:SIZES[pr.sz] ? pr.sz : 'S', vw:pr.vw === 'fog' ? 'fog' : '2d' };
+    const e = m.get(pr.a) || { code:pr.a, n:0, pl:0, md:pmd(pr.md), sz:SIZES[pr.sz] ? pr.sz : 'S', vw:pr.vw === 'fog' ? 'fog' : '2d', wx:WEATHERS[pr.wx] ? pr.wx : 'clear' };
     e.n++; if (pr.pl === 1) e.pl++; m.set(pr.a, e);
   }
   return [...m.values()];
@@ -1097,7 +1104,7 @@ function renderArenas(){
   box.replaceChildren(...l.map(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'arow' + (e.code === arenaCode ? ' here' : '');
     const c = document.createElement('b'); c.textContent = e.code.toUpperCase();
-    const t = document.createElement('span'); t.textContent = MODESHORT[e.md] + ' · ' + e.sz + (e.vw === 'fog' ? ' · nebbia' : '') + ' · ' + e.pl + (e.pl === 1 ? ' in gioco' : ' in gioco') + (e.code === arenaCode ? ' · sei qui' : '');
+    const t = document.createElement('span'); t.textContent = MODESHORT[e.md] + ' · ' + e.sz + (e.wx && e.wx !== 'clear' ? ' · ' + WEATHERS[e.wx].toLowerCase() : '') + (e.vw === 'fog' ? ' · nebbia' : '') + ' · ' + e.pl + (e.pl === 1 ? ' in gioco' : ' in gioco') + (e.code === arenaCode ? ' · sei qui' : '');
     b.append(c, t); b.addEventListener('click', () => joinArena(e.code)); return b;
   }));
 }
@@ -1136,7 +1143,7 @@ function netRead(){
     r.kh = num(pr.kh,0,1e6,0)/10; r.wv = Number.isInteger(pr.wv) ? clamp(pr.wv,0,999) : null;
     r.rb = Array.isArray(pr.rb) && pr.rb.length === 2 && typeof pr.rb[1] === 'string' ? { v:Math.round(num(pr.rb[0],0,1e6,0)), k:pr.rb[1].slice(0,48) } : null;
     if (pr.lb !== r.lbSrc){ r.lbSrc = pr.lb; lbIn(pr.lb); }
-    r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d'; r.cm = typeof pr.cm === 'string' && CMRE.test(pr.cm) ? pr.cm : '';
+    r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d'; r.wx = WEATHERS[pr.wx] ? pr.wx : 'clear'; r.cm = typeof pr.cm === 'string' && CMRE.test(pr.cm) ? pr.cm : '';
     r.hs = Number.isInteger(pr.hs) && pr.hs >= 0 && pr.hs < 64 ? pr.hs : -1; r.bh = Array.isArray(pr.bh) ? pr.bh.slice(0,16).filter(x => Number.isInteger(x) && x >= 0 && x < 64) : null;
     const kb = readMap(pr.kb), bk = readMap(pr.bk);
     if (!fresh){
@@ -1161,7 +1168,7 @@ function netRead(){
     const beats = (e,s) => r.ep > e || (r.ep === e && r.seed > s);
     if (beats(mapEp,mapSeed) && (!best || beats(best.ep,best.seed))) best = r;
   }
-  if (best) loadMap(best.seed, best.ep, mapEp === 0 ? 'Mappa ' + mapCode(best.seed) + ' di ' + best.name : best.name + ' ha cambiato mappa o partita', best.md, best.bo, best.sz, best.fe, best.ms, best.vw, best.cm);
+  if (best) loadMap(best.seed, best.ep, mapEp === 0 ? 'Mappa ' + mapCode(best.seed) + ' di ' + best.name : best.name + ' ha cambiato mappa o partita', best.md, best.bo, best.sz, best.fe, best.ms, best.vw, best.cm, best.wx);
   readHostBots();
 }
 function readMap(o){
@@ -1202,7 +1209,8 @@ function readHostBots(){
   }
   lastBt = { list, at:performance.now() };
 }
-function loadMap(seed, ep, msg, md, b, size, f, mst, v, cm){
+function loadMap(seed, ep, msg, md, b, size, f, mst, v, cm, w){
+  if (WEATHERS[w]) wx = w;
   if (cm !== undefined){ const d = cm ? decodeMap(cm) : null; customMap = d ? cm : ''; if (d) size = d.size; }
   const prev = mode; mode = md || mode; bo = b || bo; fe = FE[f] ? f : fe; ms = mst || Date.now(); overAt = 0; setSize(size || sz);
   vw = VIEWS[v] ? v : vw; PU.dim.n = fogOn() ? 'Faro' : 'Salto 3D';
@@ -1212,6 +1220,7 @@ function loadMap(seed, ep, msg, md, b, size, f, mst, v, cm){
   flags = [homeFlag(0), homeFlag(1)]; score = [0,0];
   if (teamMode() && (prev !== mode || team >= NT())) team = resolveTeam();
   else if (!teamMode()) team = 0;
+  { const r = prng((seed*5 + 11) | 0), a = r()*Math.PI*2, f = wx === 'wind' ? 70 + r()*60 : 0; wind = { x:Math.cos(a)*f, y:Math.sin(a)*f }; }
   hill = pickHill(); rab = { v:0, k:'' }; wave = 0; waveAt = 0; me.kh = 0;
   parts = []; ghosts = []; me.bullets = [];
   if (me.playing && me.alive) respawn(me);
@@ -1275,6 +1284,11 @@ function setBo(v){
   v = [3,5,11].includes(+v) ? +v : 3; store.set('kw.bo', String(v));
   if (v === bo) return syncUI();
   loadMap(mapSeed, Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto: al meglio di ' + v, mode, v, sz, fe, 0, vw);
+}
+function setWx(w){
+  if (!WEATHERS[w]) return; store.set('kw.wx', w);
+  if (w === wx) return syncUI();
+  loadMap(mapSeed, Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto il meteo: ' + WEATHERS[w].toLowerCase(), mode, bo, sz, fe, 0, vw, undefined, w);
 }
 function setVw(v){
   if (!VIEWS[v]) return; store.set('kw.vw', v);
@@ -1488,7 +1502,7 @@ function netSmooth(dt){
 }
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
-    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, cm:customMap || null, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
+    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, wx, cm:customMap || null, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
     bt:isHost ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
     bb:isHost ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
@@ -1658,7 +1672,7 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     for (const [f,a] of [[1,.2],[1.1,.2],[1.22,.2],[1.36,.22]]){
       ctx.beginPath(); ctx.rect(0,0,cw,ch);
       const ring = []; for (let i = 0; i < 56; i++){ const t = i/56*Math.PI*2; ring.push(Q(me.x + Math.cos(t)*FR*f, me.y + Math.sin(t)*FR*f, 0)); }
-      trace(ring); ctx.fillStyle = 'rgba(28,12,48,' + a + ')'; ctx.fill('evenodd'); }
+      trace(ring); ctx.fillStyle = 'rgba(28,12,48,' + (wx === 'night' ? a*1.25 : a) + ')'; ctx.fill('evenodd'); }
   }
   function plat(w){
     const x0 = w[0], y0 = w[1], x1 = w[0]+w[2], y1 = w[1]+w[3], h = PH, c = BLOCK[2], L = rampLen(w), hor = w[2] >= w[3];
@@ -1696,6 +1710,32 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
     if (poly([Q(x0,y0,h),Q(x1,y0,h),Q(x1,y1,h),Q(x0,y1,h)])){ ctx.fillStyle = c[0]; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5; ctx.stroke(); }
     if (w[4] === 1 && w[2] >= 60 && (Cw.y > y1 || Cw.y < y0)){ const f = P((x0+x1)/2, Cw.y > y1 ? y1 : y0, h*.5); if (f){ ctx.save(); ctx.translate(f.x,f.y); ctx.scale(f.k*1.3, f.k*1.3); face(0,9,false); ctx.restore(); } }
   }
+}
+let lightC = null;
+function nightLayer(cw, ch, sc, camx, camy){
+  if (!lightC) lightC = document.createElement('canvas');
+  if (lightC.width !== cw || lightC.height !== ch){ lightC.width = cw; lightC.height = ch; }
+  const l = lightC.getContext('2d'), S = (x,y) => [cw/2 + (x-camx)*sc, ch/2 + (y-camy)*sc];
+  l.globalCompositeOperation = 'source-over'; l.clearRect(0,0,cw,ch); l.fillStyle = 'rgba(14,6,36,.86)'; l.fillRect(0,0,cw,ch);
+  l.globalCompositeOperation = 'destination-out';
+  const glow = (x,y,r,al) => { const [px,py] = S(x,y), g = l.createRadialGradient(px,py,0,px,py,r*sc); g.addColorStop(0,'rgba(0,0,0,' + al + ')'); g.addColorStop(1,'rgba(0,0,0,0)'); l.fillStyle = g; l.beginPath(); l.arc(px,py,r*sc,0,Math.PI*2); l.fill(); };
+  const lamp = (x,y,a,mine) => { glow(x,y,mine ? 160 : 80,1); const [px,py] = S(x,y), len = 440*sc, g = l.createRadialGradient(px,py,0,px,py,len);
+    g.addColorStop(0,'rgba(0,0,0,.95)'); g.addColorStop(1,'rgba(0,0,0,0)'); l.fillStyle = g; l.beginPath(); l.moveTo(px,py); l.arc(px,py,len,a-.38,a+.38); l.closePath(); l.fill(); };
+  if (me.playing && me.alive) lamp(me.x, me.y, me.a, true);
+  for (const r of remotes.values()) if (r.alive && !r.fx.includes('g')) lamp(r.rx, r.ry, r.ra, false);
+  for (const b of bots) if (b.alive && !bOn(b,'ghost')) lamp(b.x, b.y, b.a, false);
+  for (const b of rbots.values()) if (b.alive && !(b.fx || '').includes('g')) lamp(b.rx, b.ry, b.ra, false);
+  for (const list of [me.bullets, ...bots.map(b => b.bullets), ...[...rbots.values()].map(b => b.bc), ...[...remotes.values()].map(r => r.bc)]) for (const b of list) glow(b.x, b.y, 40, .9);
+  for (const g of ghosts) glow(g.x, g.y, 60, .6);
+  ctx.drawImage(lightC, 0, 0, cw, ch);
+}
+function windLayer(cw, ch, now){
+  const a = Math.atan2(wind.y, wind.x), f = Math.hypot(wind.x, wind.y)/130;
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  for (let i = 0; i < 26; i++){ const r = prng(i*977 + 3), sp = 260 + r()*200, t = (now/1000*sp + r()*4000) % (cw + ch + 400) - 200;
+    const x = ((r()*cw + Math.cos(a)*t) % (cw + 200) + cw + 200) % (cw + 200) - 100, y = ((r()*ch + Math.sin(a)*t) % (ch + 200) + ch + 200) % (ch + 200) - 100;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(a)*30*f, y - Math.sin(a)*30*f); ctx.stroke(); }
+  ctx.restore();
 }
 function hillDraw(now){
   const h = hill, k = h.king, c = k ? (k === me ? '#ff8fc8' : '#ffd84a') : h.busy ? '#ff9a62' : '#ffe58a';
@@ -1805,6 +1845,8 @@ function draw(now){
   ctx.globalAlpha = 1; ctx.font = '700 24px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
   for (const p of pops){ ctx.globalAlpha = Math.max(0,1-p.t/.9); ctx.lineWidth = 6; ctx.strokeStyle = '#fff6fb'; ctx.strokeText(p.text,p.x,p.y-p.t*40); ctx.fillStyle = '#ff5c9d'; ctx.fillText(p.text,p.x,p.y-p.t*40); }
   ctx.restore(); ctx.globalAlpha = 1;
+  if (wx === 'night') nightLayer(cw, ch, sc, camx, camy);
+  if (wx === 'wind') windLayer(cw, ch, now);
   if (fxOn('blind') && me.alive){ const px = cw/2 + (me.x - camx)*sc, py = ch/2 + (me.y - camy)*sc, g = ctx.createRadialGradient(px, py, 150*sc, px, py, 300*sc);
     g.addColorStop(0, 'rgba(28,12,48,0)'); g.addColorStop(1, 'rgba(28,12,48,.93)'); ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch); }
   corner(cw, ch);
@@ -1819,7 +1861,7 @@ function corner(cw, ch){
   if (showMini) minimap(12, 12, mw);
 }
 /* who you may see: in the fog only what is in sight, your team, and yourself */
-const inSight = (x,y,tm) => !(fogOn() && me.playing) || Math.hypot(x - me.x, y - me.y) < fogR() || (teamMode() && tm === team);
+const inSight = (x,y,tm) => !((fogOn() || wx === 'night') && me.playing) || Math.hypot(x - me.x, y - me.y) < (fogOn() ? fogR() : 440) || (teamMode() && tm === team);
 function minimap(ox, oy, mw){
   const ms = mw/W, mh = H*ms, X = ox + 6, Y = oy + 6;
   ctx.fillStyle = 'rgba(43,24,70,.78)'; rr(ox,oy,mw+12,mh+12,12); ctx.fill();
@@ -1890,6 +1932,8 @@ function hud(now){
     if (mode === 'rabbit') t = (tt || 'Primo a 10 punti') + ' · ' + (rab.k ? (rab.k === myHolderKey() ? 'sei il coniglio!' : 'coniglio: ' + nameOf(rab.k)) : 'si sceglie il coniglio…');
     if (mode === 'tdm4'){ const ts = [0,0,0,0]; for (const p of list) if (p.tm >= 0 && p.tm < 4) ts[p.tm] += p.k; t = (tt || 'Prima a ' + TDM_WIN) + ' · ' + TEAMS.map((x,i) => x.e + ' ' + ts[i]).join('  '); }
     if (mode === 'waves'){ const dead = list.filter(p => p.hu).reduce((n,p) => n + p.d, 0); t = 'Ondata ' + wave + ' · vite ' + Math.max(0, livesMax() - dead) + ' · bot ' + (bots.length ? bots.filter(b => b.alive).length : [...rbots.values()].filter(b => b.alive).length); }
+    if (wx === 'wind') t += ' · vento ' + '→↘↓↙←↖↑↗'[Math.round(((Math.atan2(wind.y, wind.x) + Math.PI*2) % (Math.PI*2)) / (Math.PI/4)) % 8];
+    if (wx === 'night') t += ' · notte';
     $('clk').textContent = t; }
   $('board').replaceChildren(row('hd','', (arenaCode ? arenaCode.toUpperCase() + ' · ' : '') + sz + ' · mappa ' + mapCode(mapSeed), mode === 'koth' ? 'S' : mode === 'rabbit' ? 'P' : 'K', 'M'), ...list.slice(0,10).map(p => row(p.me ? 'me' : '', teamMode() ? HUES[p.h][1] : HUES[p.h][0], p.n, p.k, p.d, teamMode() ? p.tm : -1)));
   const n = remotes.size + (me.playing ? 1 : 0);
@@ -1902,7 +1946,7 @@ function hud(now){
   else if (carry){ m.style.display = 'block'; m.textContent = flags[team].s === 0 ? 'Hai la bandiera! Portala alla base ' + TEAMS[team].n : 'Hai la bandiera, ma la vostra è fuori base: recuperatela'; }
   else if (ctf && me.playing && flags[team].s === 1){ m.style.display = 'block'; m.textContent = holderName(flags[team].h) + ' ha la vostra bandiera!'; }
   else m.style.display = 'none';
-  $('mdnote').hidden = !(remotes.size && !me.playing); for (const id of ['c-sz','c-md','c-vw','c-fe','c-bo']) $(id).disabled = !canSteer();
+  $('mdnote').hidden = !(remotes.size && !me.playing); for (const id of ['c-sz','c-md','c-vw','c-wx','c-fe','c-bo']) $(id).disabled = !canSteer();
   if (!$('start').hidden) renderArenas();
   const act = me.playing && me.alive ? [...PUK, ...BADK].filter(fxOn) : [];
   if (spec && !me.playing){ const w = watched(); const e = document.createElement('span'); e.textContent = 'Guardi ' + (w ? w.n : 'l\'arena vuota') + ' · ←/→ cambia · Invio per giocare'; $('fxb').replaceChildren(e); $('dropb').hidden = true; }
@@ -2072,14 +2116,14 @@ for (const ev of ['pointerup','pointercancel']) fb.addEventListener(ev, () => { 
 
 function syncUI(){
   lobbyPub(); if (room && room.web) $('copy').textContent = 'Copia link'; $('arbtn').textContent = arenaCode ? 'Arena ' + arenaCode.toUpperCase() : 'Arene';
-  for (const [h,c,v] of [['sz','c-sz',sz],['md','c-md',mode],['vw','c-vw',vw],['fe','c-fe',fe],['bo','c-bo',String(bo)],['tm','c-tm',teamPref]]){ $(h).value = v; $(c).value = v; }
+  for (const [h,c,v] of [['sz','c-sz',sz],['md','c-md',mode],['vw','c-vw',vw],['wx','c-wx',wx],['fe','c-fe',fe],['bo','c-bo',String(bo)],['tm','c-tm',teamPref]]){ $(h).value = v; $(c).value = v; }
   const ctf = mode === 'ctf';
   $('tmw').hidden = !teamMode(); $('c-tmw').hidden = !teamMode();
   for (const id of ['tm','c-tm']) for (const o of $(id).options) if (o.value === '2' || o.value === '3') o.hidden = mode !== 'tdm4'; $('bow').hidden = !ctf; $('c-bow').hidden = !ctf; $('few').hidden = ctf || mode === 'waves'; $('c-few').hidden = ctf || mode === 'waves';
   const goal = mode === 'koth' ? 'primo a ' + KOTH_WIN + ' s in cima' : mode === 'rabbit' ? 'primo a 10 punti' : mode === 'tdm4' ? 'prima squadra a ' + TDM_WIN : 'primo a 10 colpi';
   $('fe').options[0].text = goal; $('c-fe').options[0].text = goal[0].toUpperCase() + goal.slice(1);
   $('bol').textContent = 'al meglio di ' + bo;
-  const steer = canSteer(); for (const id of ['c-sz','c-md','c-vw','c-fe','c-bo']) $(id).disabled = !steer;
+  const steer = canSteer(); for (const id of ['c-sz','c-md','c-vw','c-wx','c-fe','c-bo']) $(id).disabled = !steer;
 }
 const canSteer = () => me.playing || !remotes.size;
 function swatches(){
@@ -2108,11 +2152,11 @@ function boot(d){
   const tp = d.team ?? store.get('kw.team'); teamPref = ['0','1','2','3'].includes(tp) ? tp : 'auto';
   const sm = d.mode ?? store.get('kw.mode');
   const sb = parseInt(store.get('kw.bo'), 10);
-  const ss = store.get('kw.sz'), sf = store.get('kw.fe'), sv = store.get('kw.vw');
+  const ss = store.get('kw.sz'), sf = store.get('kw.fe'), sv = store.get('kw.vw'), sw = store.get('kw.wx'); if (WEATHERS[sw]) wx = sw;
   loadMap(ds, 0, null, pmd(sm), [3,5,11].includes(sb) ? sb : 3, SIZES[ss] ? ss : 'S', FE[sf] ? sf : 'k10', 0, VIEWS[sv] ? sv : '2d'); team = resolveTeam();
   $('newmap').addEventListener('click', e => { e.currentTarget.blur(); if (canSteer()) rollMap(); else addFeed('Entra nell\'arena per cambiarla'); });
   /* header menus and start-card menus share the same setters */
-  for (const [h,c,set,what] of [['sz','c-sz',setSz,'cambiarne la dimensione'],['md','c-md',setMode,'cambiare modalità'],['vw','c-vw',setVw,'cambiare la vista'],['fe','c-fe',setFe,'cambiare la partita'],['bo','c-bo',setBo,'cambiare la partita']])
+  for (const [h,c,set,what] of [['sz','c-sz',setSz,'cambiarne la dimensione'],['md','c-md',setMode,'cambiare modalità'],['vw','c-vw',setVw,'cambiare la vista'],['wx','c-wx',setWx,'cambiare il meteo'],['fe','c-fe',setFe,'cambiare la partita'],['bo','c-bo',setBo,'cambiare la partita']])
     for (const id of [h,c]) $(id).addEventListener('change', e => { if (id === h) e.target.blur(); if (canSteer()) set(e.target.value); else { addFeed('Entra nell\'arena per ' + what); syncUI(); } });
   for (const id of ['tm','c-tm']) $(id).addEventListener('change', e => { if (id === 'tm') e.target.blur(); setTeamPref(e.target.value); });
   $('again').addEventListener('click', e => { e.currentTarget.blur(); if (canSteer()) rollMap((me.playing ? me.name : 'Qualcuno') + ' chiede la rivincita'); });

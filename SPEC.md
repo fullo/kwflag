@@ -232,6 +232,14 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - In rete il codice viaggia nella tupla dell'arena (`cm` in presence, validato con un'espressione regolare); teletrasporti
   e bandierine si generano dai blocchi con il seme ricavato dal codice. "Nuova mappa" o un cambio di taglia tornano al generatore.
 
+## v16 — Meteo (iterazione extra 1)
+- Meteo dell'arena (`wx`: `clear` | `wind` | `night`), nella tupla come la vista; le arene aperte lo mostrano.
+- **Vento**: direzione e forza (70–130 px/s²) dal seme; spinge colpi normali e missili (non laser né onda). Righe di vento
+  a schermo e freccia nella fascia in alto. I bot non lo compensano.
+- **Notte**: in 2D uno strato scuro con buchi di luce: alone attorno a ogni carro, faro a cono (440, ±22°) nella direzione
+  del cannone, bagliore dei colpi e dei fantasmi; gli invisibili non hanno luce. La minimappa mostra solo ciò che è entro
+  440 (e la squadra); il radar resta un radar. Nella nebbia: raggio ×0,8 e nebbia più scura.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
