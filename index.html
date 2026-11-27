@@ -113,14 +113,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   .mob{display:block}
   #mmb{position:absolute;top:8px;left:8px;width:38px;height:38px;border-radius:10px;border:2px solid var(--lilac);background:var(--panel);font-size:17px;padding:0;cursor:pointer}
   #mmb[aria-pressed=true]{background:var(--star)}
-  #feedb{position:absolute;left:14px;bottom:126px;width:40px;height:40px;border-radius:50%;border:2px solid var(--lilac);background:var(--panel);font-size:18px;padding:0;cursor:pointer}
+  #feedb{position:absolute;left:14px;bottom:206px;width:40px;height:40px;border-radius:50%;border:2px solid var(--lilac);background:var(--panel);font-size:18px;padding:0;cursor:pointer}
   #feedn{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--pink);color:var(--bg);font:700 12px/20px Fredoka,sans-serif;text-align:center;padding:0 4px}
   #feedn[hidden]{display:none}
-  #feed{display:none!important;bottom:174px!important}
+  #feed{display:none!important;bottom:254px!important}
   #feed.open{display:flex!important}
   /* bear paw: a smaller fire pad with emoji toes around it, so the thumb barely moves */
-  #fire{width:62px!important;height:62px!important;right:14px!important;bottom:20px!important;font-size:13px!important;box-shadow:0 4px 0 #d9a800!important}
-  #stick{width:104px!important;height:104px!important;left:12px!important;bottom:12px!important}
+  #fire{width:62px!important;height:62px!important;right:24px!important;bottom:100px!important;font-size:13px!important;box-shadow:0 4px 0 #d9a800!important}
+  #stick{width:104px!important;height:104px!important;left:22px!important;bottom:92px!important}
   /* see-through controls: what's underneath (an enemy, a shot) stays visible; a pressed control lights up */
   #fire,#emo>button,#stick,#feedb,#mmb{opacity:.5;transition:opacity .12s}
   #fire:active,#emo>button:active,#stick:active,#feedb:active,#mmb:active,#mmb[aria-pressed=true]{opacity:.95}
@@ -131,13 +131,13 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   #emo .tx{display:none}
   #emo > button{position:absolute;margin:0}
   #jumpb,#emob,#dropb{width:40px!important;min-width:0!important;height:40px!important;min-height:0!important;padding:0!important;border-radius:50%!important;font-size:18px!important;line-height:1;background:var(--panel)!important}
-  #jumpb{right:31px;bottom:99px}
-  #emob{right:77px;bottom:75px}
-  #dropb{right:93px;bottom:25px}
+  #jumpb{right:41px;bottom:179px}
+  #emob{right:87px;bottom:155px}
+  #dropb{right:103px;bottom:105px}
   #dropb[hidden]{display:none}
-  #emo [data-e]{display:none;right:146px;min-width:60px;min-height:34px!important;font-size:13px!important;padding:2px 10px}
+  #emo [data-e]{display:none;right:156px;min-width:60px;min-height:34px!important;font-size:13px!important;padding:2px 10px}
   #emo.open [data-e]{display:block}
-  #emo [data-e="0"]{bottom:206px} #emo [data-e="1"]{bottom:166px} #emo [data-e="2"]{bottom:126px} #emo [data-e="3"]{bottom:86px}
+  #emo [data-e="0"]{bottom:286px} #emo [data-e="1"]{bottom:246px} #emo [data-e="2"]{bottom:206px} #emo [data-e="3"]{bottom:166px}
 }
 #board{position:absolute;top:12px;right:12px;background:var(--panel);border-radius:16px;padding:8px 12px;min-width:180px;font-size:14px}
 #board .row{display:grid;grid-template-columns:12px minmax(0,1fr) 2.4ch 2.4ch;gap:8px;align-items:center}
