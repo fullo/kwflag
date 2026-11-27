@@ -270,6 +270,13 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   risoluzione e ridisegnate al massimo 30 volte al secondo; densità di pixel che scende da sola (2 → 1,5 → 1) se i
   fotogrammi restano lenti per 3 s.
 
+## v20 — Interfaccia del telefono più sgombra
+- Sotto i 600 px di larghezza: i messaggi stanno dietro un fumetto 💬 con il numero dei non letti; un tocco mostra gli
+  ultimi sei, che spariscono dopo 5 s (o con un altro tocco). La minimappa è un'icona 🗺️ in alto a sinistra: un tocco la
+  apre, un altro tocco (sull'icona o sulla mappa) o 10 s la richiudono. La classifica diventa compatta (prime tre righe più
+  la tua, senza intestazione) sotto l'icona, e il radar prende il suo vecchio posto in alto a destra. Le quattro emote
+  stanno dietro un pulsante ☺ e si richiudono dopo l'invio. Su desktop non cambia nulla.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
