@@ -49,6 +49,10 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .card .sw{margin-top:8px}
 @media(max-width:520px){.opts{grid-template-columns:1fr 1fr}.card .sw{gap:6px}.card .sw button{width:32px;height:32px}}
 .alt{margin:10px 0 0;text-align:center}
+.lb{display:flex;flex-direction:column;gap:3px;margin:6px 0}
+.lbr{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:3px 8px;border-radius:8px;background:#f3ecff}
+.lbr.me{background:#ffe9f3}
+.lbr span{color:#5a4a72}
 #tut{position:absolute;top:58px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border:3px solid var(--pink);border-radius:16px;padding:8px 10px 8px 16px;font-weight:600;font-size:17px;display:flex;gap:10px;align-items:center;max-width:92%}
 #tut[hidden]{display:none}
 #tutx{font:inherit;font-size:14px;border:2px solid var(--lilac);background:#fff;color:var(--bg);border-radius:10px;min-height:36px;padding:2px 10px;cursor:pointer}
@@ -193,6 +197,10 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
       <p class="hint" id="mdnote" hidden>La partita la decide chi è già in gioco: potrai cambiarla dal menu in alto una volta entrato.</p>
       <div class="foot">
       <p class="hint stats"><span id="stats"></span> <button type="button" id="statreset" class="lnk">Azzera</button></p>
+      <details class="help"><summary>Classifica dei giocatori</summary>
+        <p>Si passa di giocatore in giocatore: ognuno porta con sé le righe migliori che ha visto. Nessun server, quindi niente garanzie: è una classifica tra amici.</p>
+        <div id="lb" class="lb"></div>
+      </details>
       <details class="help"><summary>Tasti, controller e consumo</summary>
         <div class="keymap" id="keys"></div>
         <p>Controller: levetta sinistra per guidare, A o grilletto destro spara, B salta, X lascia la bandierina, Y saluta, dorsali per minimappa e radar, Start per entrare.</p>
@@ -425,7 +433,31 @@ let room = null, net = 'wait', myPeer = null, lastSend = 0, lastHud = 0;
 /* arenas: the lobby room lists who is where; each arena is its own named room */
 let arena = null, arenaCode = '';
 let stats = (() => { try { const o = JSON.parse(localStorage.getItem('kw.stats') || '{}'); return { p:+o.p || 0, w:+o.w || 0, k:+o.k || 0, d:+o.d || 0, c:+o.c || 0 }; } catch(e){ return { p:0, w:0, k:0, d:0, c:0 }; } })();
-function saveStats(){ store.set('kw.stats', JSON.stringify(stats)); showStats(); }
+function saveStats(){ store.set('kw.stats', JSON.stringify(stats)); noteMe(); showStats(); }
+/* shared leaderboard without a server: everyone carries the best rows they have seen and passes them on in presence,
+   so the board spreads from player to player across arenas and sessions. One row per nickname, the most games wins. */
+let seen = (() => { try { const o = JSON.parse(store.get('kw.seen') || '{}'); return o && typeof o === 'object' ? o : {}; } catch(e){ return {}; } })(), seenDirty = 0;
+const cleanName = n => typeof n === 'string' ? n.replace(/[\u0000-\u001f]/g,'').slice(0,16).trim() : '';
+function mergeRow(n, p, w, k, d, c){
+  n = cleanName(n); if (!n || !(p > 0)) return;
+  const o = seen[n], v = { p:Math.round(p), w:Math.round(Math.min(w,p)), k:Math.round(k), d:Math.round(d), c:Math.round(c), at:Date.now() };
+  if (!o || v.p > o.p || (v.p === o.p && v.k > o.k)){ seen[n] = v; seenDirty = Date.now(); }
+}
+function noteMe(){ if (me.name && stats.p) mergeRow(me.name, stats.p, stats.w, stats.k, stats.d, stats.c); }
+const boardRows = () => Object.entries(seen).sort((a,b) => b[1].w - a[1].w || b[1].k - a[1].k || b[1].p - a[1].p);
+function lbOut(){ return boardRows().slice(0,10).map(([n,v]) => [n, v.p, v.w, v.k, v.d, v.c]); }
+function lbIn(list){ if (!Array.isArray(list)) return; for (const e of list.slice(0,10)) if (Array.isArray(e) && e.length === 6) mergeRow(e[0], num(e[1],0,1e6,0), num(e[2],0,1e6,0), num(e[3],0,1e7,0), num(e[4],0,1e7,0), num(e[5],0,1e6,0)); }
+function lbSave(){
+  if (!seenDirty) return; seenDirty = 0;
+  const keep = boardRows().slice(0,40); seen = Object.fromEntries(keep); store.set('kw.seen', JSON.stringify(seen)); lbUI();
+}
+function lbUI(){
+  const rows = boardRows().slice(0,10), box = $('lb'); if (!box) return;
+  if (!rows.length){ box.textContent = 'Ancora vuota: si riempie giocando con altri.'; return; }
+  box.replaceChildren(...rows.map(([n,v],i) => { const r = document.createElement('div'); r.className = 'lbr' + (n === me.name ? ' me' : '');
+    const a = document.createElement('b'); a.textContent = (i+1) + '. ' + n; const b = document.createElement('span');
+    b.textContent = v.w + (v.w === 1 ? ' vinta' : ' vinte') + ' · ' + v.k + ' colpi · ' + v.p + (v.p === 1 ? ' partita' : ' partite'); r.append(a, b); return r; }));
+}
 function showStats(){
   const el = $('stats'); if (!el) return;
   el.textContent = stats.p ? 'Su questo browser: ' + stats.p + (stats.p === 1 ? ' partita' : ' partite') + ', ' + stats.w + (stats.w === 1 ? ' vinta' : ' vinte') +
@@ -1073,6 +1105,7 @@ function netRead(){
     r.sc = Array.isArray(pr.sc) ? [Math.round(num(pr.sc[0],0,999,0)), Math.round(num(pr.sc[1],0,999,0))] : null;
     r.kh = num(pr.kh,0,1e6,0)/10; r.wv = Number.isInteger(pr.wv) ? clamp(pr.wv,0,999) : null;
     r.rb = Array.isArray(pr.rb) && pr.rb.length === 2 && typeof pr.rb[1] === 'string' ? { v:Math.round(num(pr.rb[0],0,1e6,0)), k:pr.rb[1].slice(0,48) } : null;
+    if (pr.lb !== r.lbSrc){ r.lbSrc = pr.lb; lbIn(pr.lb); }
     r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d';
     r.hs = Number.isInteger(pr.hs) && pr.hs >= 0 && pr.hs < 64 ? pr.hs : -1; r.bh = Array.isArray(pr.bh) ? pr.bh.slice(0,16).filter(x => Number.isInteger(x) && x >= 0 && x < 64) : null;
     const kb = readMap(pr.kb), bk = readMap(pr.bk);
@@ -1424,7 +1457,7 @@ function netSmooth(dt){
 }
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
-    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
+    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
     bt:isHost ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
     bb:isHost ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
@@ -1895,7 +1928,7 @@ function frame(t){
   for (let i = parts.length-1; i >= 0; i--){ const p = parts[i]; p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= .92; p.vy *= .92; p.rot += dt*4; if ((p.life -= dt) <= 0) parts.splice(i,1); }
   pops = pops.filter(p => (p.t += dt) < .9); ghosts = ghosts.filter(g => (g.t += dt) < 3);
   netSend(t); musicTick();
-  if (t - lastHud > 250){ lastHud = t; hud(t); }
+  if (t - lastHud > 250){ lastHud = t; hud(t); if (seenDirty && Date.now() - seenDirty > 3000) lbSave(); }
   draw(t);
   requestAnimationFrame(frame);
 }
@@ -1966,7 +1999,7 @@ function swatches(){
 $('form').addEventListener('submit', e => {
   e.preventDefault(); spec = null;
   me.name = $('nick').value.trim().replace(/[\u0000-\u001f]/g,'').slice(0,16) || $('nick').placeholder;
-  store.set('kw.name', me.name);
+  store.set('kw.name', me.name); noteMe(); lbSave();
   if (me.playing){ $('start').hidden = true; sendNow(); lobbyPub(); return; }
   me.seed = (me.name.length*.37) % 1; me.playing = true;
   if (teamMode()){ const nt = resolveTeam(); if (nt !== team) team = nt; bots = []; }
@@ -2016,8 +2049,8 @@ function boot(d){
   $('dropb').addEventListener('pointerdown', e => { e.preventDefault(); dropFlag(); });
   $('jumpb').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
   audioUI();
-  showStats();
-  $('statreset').addEventListener('click', () => { stats = { p:0, w:0, k:0, d:0, c:0 }; saveStats(); });
+  showStats(); lbUI();
+  $('statreset').addEventListener('click', () => { stats = { p:0, w:0, k:0, d:0, c:0 }; delete seen[me.name]; seenDirty = Date.now(); saveStats(); lbSave(); });
   swatches(); connect(); requestAnimationFrame(frame);
 }
 window.claude?.hot?.snapshot?.(() => ({ name:me.name, hue:me.hue, lvl, seed:mapSeed, mode, team:teamPref }));

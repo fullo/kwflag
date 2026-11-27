@@ -216,6 +216,13 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   prima a 20, o la più alta a tempo scaduto. La cattura della bandiera resta a due squadre.
 - Squadra scelta o casuale (la meno numerosa); i bot riempiono la squadra più piccola e inseguono il nemico più vicino.
 
+## v14 — Classifica condivisa senza server (fase 4b)
+- Ognuno tiene in `kw.seen` fino a 40 righe (soprannome → partite, vinte, colpi dati e presi, bandiere) e ne passa le 10
+  migliori in presence (`lb`). Chi le riceve le fonde: per soprannome vince la riga con più partite (a parità, più colpi).
+  Così la classifica si propaga di giocatore in giocatore, tra arene e sessioni, anche su GitHub Pages.
+- Limiti dichiarati: niente server, quindi nessuna verifica (un soprannome si può imitare); va bene tra amici. Il `db`
+  dell'artifact non è usato: chi apre il link pubblico da fuori organizzazione non potrebbe scriverci.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.

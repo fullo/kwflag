@@ -15,7 +15,8 @@ tutti contro tutti o cattura della bandiera. Gira interamente nel browser, senza
 - Bandierine stile BZFlag, una alla volta: tiro rapido, rimbalzo, perforante, laser, missile guidato, onda d'urto, scudo,
   invisibilità, stealth, identifica, turbo e **Salto 3D**, che porta la tua
   vista in 2.5D e ti fa salire sui blocchi gialli (piattaforme) dalle rampe ai due capi. Teletrasporti a vortice.
-- Statistiche personali (partite, vittorie, colpi, bandiere) salvate solo nel tuo browser.
+- Statistiche personali (partite, vittorie, colpi, bandiere) salvate nel tuo browser, e una classifica condivisa che passa
+  di giocatore in giocatore (senza server: va bene tra amici).
 - Vista dell'arena, scelta a inizio partita e uguale per tutti: **2D dall'alto** oppure **2.5D nella nebbia**, con la
   telecamera alle spalle del carro, vista ridotta attorno a te, carri e colpi più veloci e la bolla «Faro» che allarga la vista.
 - Una bandierina buona dura finché la lasci (Q) o al massimo 30 secondi. Quelle «?» possono essere cattive (comandi invertiti,
