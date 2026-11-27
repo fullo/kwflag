@@ -238,7 +238,9 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   a schermo e freccia nella fascia in alto. I bot non lo compensano.
 - **Notte**: in 2D uno strato scuro con buchi di luce: alone attorno a ogni carro, faro a cono (440, ±22°) nella direzione
   del cannone, bagliore dei colpi e dei fantasmi; gli invisibili non hanno luce. La minimappa mostra solo ciò che è entro
-  440 (e la squadra); il radar resta un radar. Nella nebbia: raggio ×0,8 e nebbia più scura.
+  440 (e la squadra); il radar resta un radar. In 2.5D (nebbia o Salto 3D) le luci sono in prospettiva: alone ellittico e
+  cono del faro proiettati sul terreno, ritagliati sul piano vicino; nella nebbia solo per i carri che si vedono, raggio ×0,8
+  e nebbia più leggera perché il buio lo fanno già i fari.
 
 ## v17 — Replay (iterazione extra 2)
 - Registrazione locale a 10 istantanee al secondo degli ultimi 20 s (carri visibili con posizione, cannone, quota, squadra,

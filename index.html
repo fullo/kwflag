@@ -1663,12 +1663,12 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
   const P = (x,y,z) => { const q = Q(x,y,z); return q.zc < 40 ? null : pj(q); };
   const dep = (x,y) => (x - Cw.x)*fw.x + (y - Cw.y)*fw.y;
   /* polygons get clipped against the near plane, so blocks next to the camera don't vanish */
-  const trace = qs => { const out = [];
+  const trace = (qs, c = ctx) => { const out = [];
     for (let i = 0; i < qs.length; i++){ const p = qs[i], n = qs[(i+1) % qs.length], pi = p.zc >= 40, ni = n.zc >= 40;
       if (pi) out.push(p);
       if (pi !== ni){ const t = (40 - p.zc)/(n.zc - p.zc); out.push({ a:p.a + (n.a-p.a)*t, b:p.b + (n.b-p.b)*t, zc:40 }); } }
     if (out.length < 3) return false;
-    out.forEach((q,i) => { const s = pj(q); i ? ctx.lineTo(s.x,s.y) : ctx.moveTo(s.x,s.y); }); ctx.closePath(); return true; };
+    out.forEach((q,i) => { const s = pj(q); i ? c.lineTo(s.x,s.y) : c.moveTo(s.x,s.y); }); c.closePath(); return true; };
   const poly = qs => { ctx.beginPath(); return trace(qs); };
   const ground = (x,y,fn) => { const p = P(x,y,0), px = P(x+1,y,0), py = P(x,y+1,0); if (!p || !px || !py || p.x < -300 || p.x > cw+300 || p.y < -300 || p.y > ch+300) return;
     ctx.save(); ctx.transform(px.x-p.x, px.y-p.y, py.x-p.x, py.y-p.y, p.x, p.y); ctx.translate(-x,-y); fn(); ctx.restore(); };
@@ -1715,12 +1715,38 @@ function draw25(now, cw, ch, sc, cx, cy, v, yaw){
   for (const p of pops) bill(p.x, p.y, 30, () => { ctx.font = '700 24px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
     ctx.globalAlpha = Math.max(0,1-p.t/.9); ctx.lineWidth = 6; ctx.strokeStyle = '#fff6fb'; ctx.strokeText(p.text,p.x,p.y-p.t*40); ctx.fillStyle = '#ff5c9d'; ctx.fillText(p.text,p.x,p.y-p.t*40); });
   ctx.globalAlpha = 1;
+  if (wx === 'night'){
+    /* night in 2.5D: a dark layer with the lights cut out on the ground, in perspective */
+    if (!lightC) lightC = document.createElement('canvas');
+    if (lightC.width !== cw || lightC.height !== ch){ lightC.width = cw; lightC.height = ch; }
+    const l = lightC.getContext('2d');
+    l.globalCompositeOperation = 'source-over'; l.clearRect(0,0,cw,ch); l.fillStyle = 'rgba(14,6,36,.84)'; l.fillRect(0,0,cw,ch);
+    l.globalCompositeOperation = 'destination-out';
+    const glow = (x,y,z,r,al) => { const p = P(x,y,z); if (!p) return; const rr = r*p.k, g = l.createRadialGradient(p.x,p.y,0,p.x,p.y,rr);
+      g.addColorStop(0,'rgba(0,0,0,' + al + ')'); g.addColorStop(1,'rgba(0,0,0,0)'); l.fillStyle = g; l.beginPath(); l.ellipse(p.x, p.y, rr, rr*Math.max(.35,se), 0, 0, Math.PI*2); l.fill(); };
+    const lamp = (x,y,a,z,mine) => {
+      glow(x,y,z,mine ? 170 : 90,1);
+      const pts = [Q(x,y,0)]; for (let k = 0; k <= 10; k++){ const t = a - .38 + k*.076; pts.push(Q(x + Math.cos(t)*460, y + Math.sin(t)*460, 0)); }
+      const p0 = P(x,y,0), p1 = P(x + Math.cos(a)*460, y + Math.sin(a)*460, 0);
+      l.beginPath(); if (!trace(pts, l)) return;
+      if (p0 && p1){ const g = l.createLinearGradient(p0.x,p0.y,p1.x,p1.y); g.addColorStop(0,'rgba(0,0,0,.95)'); g.addColorStop(1,'rgba(0,0,0,0)'); l.fillStyle = g; }
+      else l.fillStyle = 'rgba(0,0,0,.6)';
+      l.fill(); };
+    if (me.playing && me.alive) lamp(me.x, me.y, me.a, me.z || 0, true);
+    for (const r of remotes.values()) if (r.alive && !r.fx.includes('g') && seen(r.rx, r.ry, r.tm)) lamp(r.rx, r.ry, r.ra, r.z || 0, false);
+    for (const b of bots) if (b.alive && !bOn(b,'ghost') && seen(b.x, b.y, b.tm)) lamp(b.x, b.y, b.a, b.z || 0, false);
+    for (const b of rbots.values()) if (b.alive && !(b.fx || '').includes('g') && seen(b.rx, b.ry, b.tm)) lamp(b.rx, b.ry, b.ra, b.el ? PH : 0, false);
+    for (const list of [me.bullets, ...bots.map(b => b.bullets), ...[...rbots.values()].map(b => b.bc), ...[...remotes.values()].map(r => r.bc)])
+      for (const b of list) if (!(b.f & (LASER|SHOCK)) && seen(b.x, b.y, -2)) glow(b.x, b.y, (b.z || (b.f & 4 ? PH : 0)) + 14, 45, .9);
+    for (const g of ghosts) if (seen(g.x, g.y, -2)) glow(g.x, g.y, 20, 60, .6);
+    ctx.drawImage(lightC, 0, 0, cw, ch);
+  }
   if (fog){
     /* fog of war: the ground beyond the sight radius darkens in steps; tanks and shots out there are not drawn at all */
     for (const [f,a] of [[1,.2],[1.1,.2],[1.22,.2],[1.36,.22]]){
       ctx.beginPath(); ctx.rect(0,0,cw,ch);
       const ring = []; for (let i = 0; i < 56; i++){ const t = i/56*Math.PI*2; ring.push(Q(me.x + Math.cos(t)*FR*f, me.y + Math.sin(t)*FR*f, 0)); }
-      trace(ring); ctx.fillStyle = 'rgba(28,12,48,' + (wx === 'night' ? a*1.25 : a) + ')'; ctx.fill('evenodd'); }
+      trace(ring); ctx.fillStyle = 'rgba(28,12,48,' + (wx === 'night' ? a*.6 : a) + ')'; ctx.fill('evenodd'); }
   }
   function plat(w){
     const x0 = w[0], y0 = w[1], x1 = w[0]+w[2], y1 = w[1]+w[3], h = PH, c = BLOCK[2], L = rampLen(w), hor = w[2] >= w[3];
