@@ -283,6 +283,7 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
   da 40 px a 68 px dal centro, distanziati di circa 12 px: 🦘 salta (sopra), 😊 emote
   (in diagonale), 🏳️ lascia la bandierina (a sinistra, solo quando ne porti una). Il pollice resta sulla zampa.
   Le emote si aprono in colonna a sinistra e si richiudono dopo l'invio.
+- Comandi semitrasparenti (opacità 0,5, piena mentre li premi), Spara compreso, per vedere cosa c'è sotto.
 - Un tocco rapido su Spara ora spara sempre un colpo (prenotato per 350 ms se il cannone si sta ricaricando).
 
 ## Prossime iterazioni (candidati)

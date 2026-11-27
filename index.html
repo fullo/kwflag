@@ -121,6 +121,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   /* bear paw: a smaller fire pad with emoji toes around it, so the thumb barely moves */
   #fire{width:62px!important;height:62px!important;right:14px!important;bottom:20px!important;font-size:13px!important;box-shadow:0 4px 0 #d9a800!important}
   #stick{width:104px!important;height:104px!important;left:12px!important;bottom:12px!important}
+  /* see-through controls: what's underneath (an enemy, a shot) stays visible; a pressed control lights up */
+  #fire,#emo>button,#stick,#feedb,#mmb{opacity:.5;transition:opacity .12s}
+  #fire:active,#emo>button:active,#stick:active,#feedb:active,#mmb:active,#mmb[aria-pressed=true]{opacity:.95}
+  #emo.open [data-e]{opacity:.85}
   #knob{width:42px!important;height:42px!important;margin:-21px!important}
   #emo{display:block!important;position:absolute;right:0;bottom:0;width:0;height:0;flex-direction:initial}
   #emo .ej{display:inline}
