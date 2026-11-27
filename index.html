@@ -49,6 +49,13 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,ui-rounded,syst
 .card .sw{margin-top:8px}
 @media(max-width:520px){.opts{grid-template-columns:1fr 1fr}.card .sw{gap:6px}.card .sw button{width:32px;height:32px}}
 .alt{margin:10px 0 0;text-align:center}
+#editor{position:absolute;left:8px;right:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px 14px;pointer-events:none}
+#editor[hidden]{display:none}
+.edbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:auto;background:rgba(43,24,70,.82);padding:6px;border-radius:14px;color:var(--ink);font-size:14px}
+.edbar button,.edbar input{font:inherit;font-weight:600;min-height:40px;padding:4px 10px;border-radius:10px;border:2px solid var(--lilac);background:#fff;color:var(--bg);cursor:pointer}
+.edbar input{cursor:text;width:14em}
+.edbar button[aria-pressed=true]{background:var(--star)}
+.edbar .go{background:var(--pink);border-color:#d1609a}
 .lb{display:flex;flex-direction:column;gap:3px;margin:6px 0}
 .lbr{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:3px 8px;border-radius:8px;background:#f3ecff}
 .lbr.me{background:#ffe9f3}
@@ -172,6 +179,12 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
   <div class="touch" id="stick"><div id="knob"></div></div>
   <button class="touch" id="fire" type="button">Spara</button>
   <div class="touch" id="emo"><button type="button" id="jumpb">salta</button><button type="button" id="dropb" hidden>lascia</button><button type="button" data-e="0">ciao!</button><button type="button" data-e="1">gg</button><button type="button" data-e="2">aiuto!</button><button type="button" data-e="3">evvai!</button></div>
+  <section id="editor" hidden>
+    <div class="edbar" id="edtools"><button type="button" data-t="0">Muro viola</button><button type="button" data-t="1">Blocco rosa</button><button type="button" data-t="2">Piattaforma gialla</button><button type="button" data-t="x">Gomma</button></div>
+    <div class="edbar"><button type="button" id="edsym">Simmetria sì</button><button type="button" id="edundo">Annulla</button><button type="button" id="edclear">Svuota</button><span id="edn"></span></div>
+    <div class="edbar"><input id="edcode" autocomplete="off" placeholder="Codice arena (kw1.…)" aria-label="Codice arena"><button type="button" id="edcopy">Copia codice</button><button type="button" id="edpaste">Usa codice</button></div>
+    <div class="edbar"><button type="button" id="edplay" class="go">Gioca questa arena</button><button type="button" id="edexit">Esci</button></div>
+  </section>
   <section id="start">
     <form class="card" id="form">
       <h1>KWFlag</h1>
@@ -213,7 +226,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-o
         <p>Vista 2D: con la bandierina «Salto 3D» passi per un po' alla vista 2.5D. Vista nella nebbia: sempre 2.5D con la telecamera alle tue spalle, vedi solo vicino a te (il radar mostra i carri più lontani), carri e colpi più veloci; la bandierina «Faro» allarga la vista.</p>
       </details>
       </div>
-      <p class="alt"><button type="button" id="tutb" class="lnk">Prova guidata (1 minuto)</button> · <button type="button" id="watch" class="lnk">Guarda la partita</button></p>
+      <p class="alt"><button type="button" id="tutb" class="lnk">Prova guidata (1 minuto)</button> · <button type="button" id="watch" class="lnk">Guarda la partita</button> · <button type="button" id="edb" class="lnk">Editor di arene</button></p>
       <button id="play" type="submit">Entra nell'arena</button>
     </form>
   </section>
@@ -369,7 +382,23 @@ function withFeatures(list, floor, rng, rot){
 }
 function prng(a){ return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const newSeed = () => 1 + Math.floor(rnd()*0x7ffffffe);
-const mapCode = s => s === 0 ? 'Classica' : s.toString(36).toUpperCase();
+const mapCode = s => customMap ? 'personalizzata' : s === 0 ? 'Classica' : s.toString(36).toUpperCase();
+/* hand-made arenas: 'kw1.<size>.' + blocks as x,y,w,h,style in tens of pixels (base 36), ';' between blocks */
+let customMap = '';
+const CMRE = /^kw1\.(S|M|L|XL)\.[0-9a-z,;]{0,1600}$/;
+function encodeMap(size, rects){ return 'kw1.' + size + '.' + rects.map(r => [r[0]/10, r[1]/10, r[2]/10, r[3]/10, r[4]].map(v => Math.round(v).toString(36)).join(',')).join(';'); }
+function decodeMap(code){
+  if (typeof code !== 'string' || !CMRE.test(code)) return null;
+  const [, size, body] = code.match(/^kw1\.(S|M|L|XL)\.(.*)$/), f = Math.sqrt(SIZES[size]), w = Math.round(1800*f/10)*10, h = Math.round(1200*f/10)*10, out = [];
+  for (const part of body ? body.split(';').slice(0,120) : []){
+    const v = part.split(',').map(x => parseInt(x,36)*10); if (v.length !== 5 || v.some(x => !isFinite(x))) continue;
+    const st = Math.round(v[4]/10); if (st < 0 || st > 2) continue;
+    const x = clamp(v[0],0,w-10), y = clamp(v[1],0,h-10), ww = clamp(v[2],10,w-x), hh = clamp(v[3],10,h-y);
+    out.push([x,y,ww,hh,st]);
+  }
+  return { size, rects:out };
+}
+const strHash = t => { let h = 2166136261; for (let i = 0; i < t.length; i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return h | 0; };
 function gap(a,b){
   const dx = Math.max(0, a[0]-(b[0]+b[2]), b[0]-(a[0]+a[2])), dy = Math.max(0, a[1]-(b[1]+b[3]), b[1]-(a[1]+a[3]));
   return Math.hypot(dx,dy);
@@ -399,6 +428,7 @@ function connected(list){
   return seen === total;
 }
 function genMap(seed){
+  if (customMap){ const d = decodeMap(customMap); if (d && d.size === sz) return withFeatures(d.rects, 0, prng(strHash(customMap)), false); }
   if (seed === 0 && sz === 'S') return withFeatures(CLASSIC, 0, prng(777), false);
   const af = SIZES[sz], rng = prng((seed || 1) + (af > 1 ? Math.round(af*1000) : 0)), r = (a,b) => a + rng()*(b-a), snap = v => Math.round(v/10)*10, MID = W/2 - 40, GAP = 80;
   for (let attempt = 0; attempt < 40; attempt++){
@@ -1106,7 +1136,7 @@ function netRead(){
     r.kh = num(pr.kh,0,1e6,0)/10; r.wv = Number.isInteger(pr.wv) ? clamp(pr.wv,0,999) : null;
     r.rb = Array.isArray(pr.rb) && pr.rb.length === 2 && typeof pr.rb[1] === 'string' ? { v:Math.round(num(pr.rb[0],0,1e6,0)), k:pr.rb[1].slice(0,48) } : null;
     if (pr.lb !== r.lbSrc){ r.lbSrc = pr.lb; lbIn(pr.lb); }
-    r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d';
+    r.fe = FE[pr.fe] ? pr.fe : 'k10'; r.ms = num(pr.ms,0,1e14,0); r.vw = pr.vw === 'fog' ? 'fog' : '2d'; r.cm = typeof pr.cm === 'string' && CMRE.test(pr.cm) ? pr.cm : '';
     r.hs = Number.isInteger(pr.hs) && pr.hs >= 0 && pr.hs < 64 ? pr.hs : -1; r.bh = Array.isArray(pr.bh) ? pr.bh.slice(0,16).filter(x => Number.isInteger(x) && x >= 0 && x < 64) : null;
     const kb = readMap(pr.kb), bk = readMap(pr.bk);
     if (!fresh){
@@ -1131,7 +1161,7 @@ function netRead(){
     const beats = (e,s) => r.ep > e || (r.ep === e && r.seed > s);
     if (beats(mapEp,mapSeed) && (!best || beats(best.ep,best.seed))) best = r;
   }
-  if (best) loadMap(best.seed, best.ep, mapEp === 0 ? 'Mappa ' + mapCode(best.seed) + ' di ' + best.name : best.name + ' ha cambiato mappa o partita', best.md, best.bo, best.sz, best.fe, best.ms, best.vw);
+  if (best) loadMap(best.seed, best.ep, mapEp === 0 ? 'Mappa ' + mapCode(best.seed) + ' di ' + best.name : best.name + ' ha cambiato mappa o partita', best.md, best.bo, best.sz, best.fe, best.ms, best.vw, best.cm);
   readHostBots();
 }
 function readMap(o){
@@ -1172,7 +1202,8 @@ function readHostBots(){
   }
   lastBt = { list, at:performance.now() };
 }
-function loadMap(seed, ep, msg, md, b, size, f, mst, v){
+function loadMap(seed, ep, msg, md, b, size, f, mst, v, cm){
+  if (cm !== undefined){ const d = cm ? decodeMap(cm) : null; customMap = d ? cm : ''; if (d) size = d.size; }
   const prev = mode; mode = md || mode; bo = b || bo; fe = FE[f] ? f : fe; ms = mst || Date.now(); overAt = 0; setSize(size || sz);
   vw = VIEWS[v] ? v : vw; PU.dim.n = fogOn() ? 'Faro' : 'Salto 3D';
   me.kb = {}; me.bk = {}; me.bs = {};
@@ -1229,11 +1260,11 @@ function modeStep(now, dt){
     }
   }
 }
-function rollMap(msg){ loadMap(newSeed(), Math.max(1,mapEp) + 1, msg || (me.playing ? me.name : 'Qualcuno') + ' ha generato una nuova mappa'); }
+function rollMap(msg){ loadMap(newSeed(), Math.max(1,mapEp) + 1, msg || (me.playing ? me.name : 'Qualcuno') + ' ha generato una nuova mappa', undefined, undefined, undefined, undefined, undefined, undefined, ''); }
 function setSz(v){
   if (!SIZES[v]) return; store.set('kw.sz', v);
   if (v === sz) return syncUI();
-  loadMap(newSeed(), Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto un\'arena ' + v, mode, bo, v, fe, 0, vw);
+  loadMap(newSeed(), Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha scelto un\'arena ' + v, mode, bo, v, fe, 0, vw, '');
 }
 function setFe(v){
   if (!FE[v]) return; store.set('kw.fe', v);
@@ -1457,7 +1488,7 @@ function netSmooth(dt){
 }
 function state(){
   return { v:1, n:me.name, h:me.hue, x:r1(me.x), y:r1(me.y), a:Math.round(me.a*100)/100, vx:r1(me.vx), vy:r1(me.vy),
-    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
+    al:me.alive ? 1 : 0, iv:me.inv > 0 ? 1 : 0, b:me.bullets.map(b => [b.id, r1(b.x), r1(b.y), r1(b.vx), r1(b.vy), (b.pr ? 1 : 0) | (b.bn > 0 ? 2 : 0) | (b.z >= ELZ ? 4 : 0) | ((b.f || 0) & (LASER|MISSILE|SHOCK))]), el:me.z >= ELZ ? 1 : 0, z:Math.round(me.z || 0), kb:me.kb, fx:fxStr(), pu:puGen, m:mapSeed, me:mapEp, md:mode, tm:team, bo, sz, fe, ms, vw, cm:customMap || null, lb:lbOut(), kh:Math.round((me.kh || 0)*10), rb:rab.v ? [rab.v, rab.k] : null, wv:isHost && mode === 'waves' ? wave : null, hs:me.hs, bh:isHost ? bots.filter(b => b.hs >= 0).map(b => b.hs) : null, bk:me.bk, em:me.emSeq ? [me.em, me.emSeq] : null,
     bt:isHost ? bots.map(b => [b.key, b.ni, b.hue, b.tm, r1(b.x), r1(b.y), Math.round(b.a*100)/100, b.alive ? 1 : 0, b.inv > 0 ? 1 : 0, b.kk, b.dd, b.role === 'att' ? 2 : b.role === 'def' ? 1 : 0, bfxStr(b), (b.z || 0) >= ELZ ? 1 : 0, Math.round((b.kh || 0)*10)]) : null,
     bb:isHost ? bots.flatMap((b,i) => b.bullets.slice(-4).map(u => [i, u.id, r1(u.x), r1(u.y), r1(u.vx), r1(u.vy), (u.pr ? 1 : 0) | (u.bn > 0 ? 2 : 0) | (u.z >= ELZ ? 4 : 0)])) : null,
     bs:me.bs,
@@ -1739,6 +1770,7 @@ function draw(now){
   const cw = cv.clientWidth, ch = cv.clientHeight, dpr = eco ? 1 : Math.min(2, window.devicePixelRatio || 1);
   if (cv.width !== Math.round(cw*dpr) || cv.height !== Math.round(ch*dpr)){ cv.width = Math.round(cw*dpr); cv.height = Math.round(ch*dpr); }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = '#3d2563'; ctx.fillRect(0,0,cw,ch);
+  if (editing){ drawEditor(cw, ch); return; }
   const sc = clamp(Math.min(cw/1100, ch/740), .5, 1.25), vw = cw/sc, vh = ch/sc;
   const wt = spec && !me.playing ? watched() : null, fx = me.playing ? me.x : wt ? wt.x : W/2, fy = me.playing ? me.y : wt ? wt.y : H/2;
   cam.x += (fx-cam.x)*.12; cam.y += (fy-cam.y)*.12;
@@ -1891,6 +1923,64 @@ function watchList(){ const l = []; for (const r of remotes.values()) if (r.aliv
 function watched(){ const l = watchList(); if (!l.length) return null; const i = ((spec.i % l.length) + l.length) % l.length; return l[i]; }
 function startWatch(){ spec = { i:0 }; $('start').hidden = true; addFeed('Modalità spettatore: ←/→ cambia carro, Invio per giocare'); }
 function stopWatch(){ spec = null; $('start').hidden = false; }
+/* arena editor: drag to draw blocks on a 10 px grid, optional left-right mirror, share as a code */
+let editing = null;
+const EDT = [['0','Muro viola'],['1','Blocco rosa'],['2','Piattaforma gialla'],['x','Gomma']];
+function openEditor(){
+  editing = { tool:'0', sym:true, rects:walls.map(w => w.slice()), undo:[], drag:null };
+  $('start').hidden = true; $('editor').hidden = false; edUI(); addFeed('Editor: trascina per disegnare un blocco, Gomma per toglierlo');
+}
+function closeEditor(){ editing = null; $('editor').hidden = true; $('start').hidden = false; }
+function edUI(){
+  for (const b of $('edtools').children) b.setAttribute('aria-pressed', String(b.dataset.t === editing.tool));
+  $('edsym').setAttribute('aria-pressed', String(editing.sym)); $('edsym').textContent = 'Simmetria ' + (editing.sym ? 'sì' : 'no');
+  $('edn').textContent = editing.rects.length + ' blocchi · arena ' + sz;
+}
+function edView(cw, ch){ const k = Math.min((cw-40)/W, (ch-40)/H); return { k, ox:(cw - W*k)/2, oy:(ch - H*k)/2 }; }
+function edPoint(e){ const r = cv.getBoundingClientRect(), v = edView(cv.clientWidth, cv.clientHeight); return { x:clamp(Math.round(((e.clientX - r.left - v.ox)/v.k)/10)*10, 0, W), y:clamp(Math.round(((e.clientY - r.top - v.oy)/v.k)/10)*10, 0, H) }; }
+const mirror = r => [W - r[0] - r[2], r[1], r[2], r[3], r[4]];
+function edDown(e){
+  if (!editing) return; const p = edPoint(e);
+  if (editing.tool === 'x'){
+    const i = editing.rects.findLastIndex(r => p.x >= r[0] && p.x <= r[0]+r[2] && p.y >= r[1] && p.y <= r[1]+r[3]); if (i < 0) return;
+    editing.undo.push(editing.rects.map(r => r.slice())); const g = editing.rects[i]; editing.rects.splice(i,1);
+    if (editing.sym){ const m = mirror(g), j = editing.rects.findIndex(r => r.every((v,q) => v === m[q])); if (j >= 0) editing.rects.splice(j,1); }
+    edUI(); return; }
+  editing.drag = { x0:p.x, y0:p.y, x1:p.x, y1:p.y }; cv.setPointerCapture(e.pointerId);
+}
+function edMove(e){ if (editing && editing.drag){ const p = edPoint(e); editing.drag.x1 = p.x; editing.drag.y1 = p.y; } }
+function edUp(){
+  if (!editing || !editing.drag) return; const d = editing.drag; editing.drag = null;
+  const x = Math.min(d.x0,d.x1), y = Math.min(d.y0,d.y1), w = Math.abs(d.x1-d.x0), h = Math.abs(d.y1-d.y0);
+  if (w < 20 || h < 20 || editing.rects.length >= 118) return;
+  editing.undo.push(editing.rects.map(r => r.slice())); const r = [x,y,w,h,+editing.tool]; editing.rects.push(r);
+  if (editing.sym && Math.abs(W - x - w - x) > 1) editing.rects.push(mirror(r));
+  edUI();
+}
+function drawEditor(cw, ch){
+  const v = edView(cw, ch); ctx.save(); ctx.translate(v.ox, v.oy); ctx.scale(v.k, v.k);
+  ctx.fillStyle = FLOORS[0][0]; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(43,24,70,.08)'; ctx.lineWidth = 1/v.k; ctx.beginPath(); for (let x = 0; x <= W; x += 50){ ctx.moveTo(x,0); ctx.lineTo(x,H); } for (let y = 0; y <= H; y += 50){ ctx.moveTo(0,y); ctx.lineTo(W,y); } ctx.stroke();
+  if (editing.sym){ ctx.strokeStyle = 'rgba(255,92,157,.5)'; ctx.setLineDash([12,10]); ctx.lineWidth = 2/v.k; ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke(); ctx.setLineDash([]); }
+  for (let i = 0; i < 2; i++){ ctx.strokeStyle = HUES[TEAMS[i].h][1]; ctx.lineWidth = 3/v.k; ctx.setLineDash([8,8]); ctx.beginPath(); ctx.arc(BASES[i].x, BASES[i].y, 64, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
+  for (const r of editing.rects){ const c = BLOCK[r[4]]; ctx.fillStyle = c[0]; ctx.strokeStyle = c[1]; ctx.lineWidth = 3/v.k; ctx.fillRect(r[0],r[1],r[2],r[3]); ctx.strokeRect(r[0],r[1],r[2],r[3]); }
+  const d = editing.drag; if (d){ const x = Math.min(d.x0,d.x1), y = Math.min(d.y0,d.y1), w = Math.abs(d.x1-d.x0), h = Math.abs(d.y1-d.y0);
+    ctx.fillStyle = 'rgba(255,92,157,.35)'; ctx.fillRect(x,y,w,h); if (editing.sym){ ctx.fillRect(W-x-w,y,w,h); } }
+  ctx.strokeStyle = '#a58ef0'; ctx.lineWidth = 6/v.k; ctx.strokeRect(0,0,W,H); ctx.restore();
+}
+function edPlay(){
+  if (!canSteer()){ addFeed('Solo chi è in gioco (o da solo) può cambiare l\'arena'); return; }
+  const code = encodeMap(sz, editing.rects);
+  loadMap(newSeed(), Math.max(1,mapEp) + 1, (me.playing ? me.name : 'Qualcuno') + ' ha caricato un\'arena personalizzata', undefined, undefined, undefined, undefined, undefined, undefined, code);
+  closeEditor();
+}
+function edCopy(){ const code = encodeMap(sz, editing.rects); $('edcode').value = code;
+  try { navigator.clipboard.writeText(code).then(() => addFeed('Codice dell\'arena copiato'), () => addFeed('Copia il codice dal campo')); } catch(e){ addFeed('Copia il codice dal campo'); } }
+function edPaste(){
+  const d = decodeMap($('edcode').value.trim()); if (!d){ addFeed('Codice non valido: deve iniziare con kw1.'); return; }
+  if (d.size !== sz){ if (!canSteer()){ addFeed('Il codice è per un\'arena ' + d.size); return; } setSize(d.size); }
+  editing.undo.push(editing.rects); editing.rects = d.rects; edUI();
+}
 /* guided practice, alone: five small steps with a teacher bot that never shoots */
 const TUT = ['1/5 · Muoviti: avanti, indietro e gira (W A S D o frecce)', '2/5 · Spara tre colpi (Spazio)', '3/5 · Salta (Tab): così superi i blocchi gialli',
   '4/5 · Prendi una bandierina: passa sopra un\'asta colorata', '5/5 · Colpisci il Bot Maestro', 'Fatto! Ora sei pronto per un\'arena vera'];
@@ -2031,7 +2121,15 @@ function boot(d){
   $('tutb').addEventListener('click', startTut);
   $('tutx').addEventListener('click', () => endTut('Prova guidata interrotta'));
   $('eco').checked = eco; $('eco').addEventListener('change', e => { eco = e.target.checked; store.set('kw.eco', eco ? '1' : '0'); if (eco && musicOn){ musicOn = false; audioUI(); } addFeed(eco ? 'Basso consumo: 30 fotogrammi al secondo, niente particelle' : 'Basso consumo spento'); });
-  cv.addEventListener('pointerdown', () => { if (spec && !me.playing) spec.i++; });
+  cv.addEventListener('pointerdown', e => { if (editing) return edDown(e); if (spec && !me.playing) spec.i++; });
+  cv.addEventListener('pointermove', edMove); cv.addEventListener('pointerup', edUp); cv.addEventListener('pointercancel', edUp);
+  $('edb').addEventListener('click', openEditor);
+  for (const b of $('edtools').children) b.addEventListener('click', () => { editing.tool = b.dataset.t; edUI(); });
+  $('edsym').addEventListener('click', () => { editing.sym = !editing.sym; edUI(); });
+  $('edundo').addEventListener('click', () => { if (editing.undo.length){ editing.rects = editing.undo.pop(); edUI(); } });
+  $('edclear').addEventListener('click', () => { editing.undo.push(editing.rects); editing.rects = []; edUI(); });
+  $('edplay').addEventListener('click', edPlay); $('edcopy').addEventListener('click', edCopy); $('edpaste').addEventListener('click', edPaste);
+  $('edexit').addEventListener('click', closeEditor);
   keysUI();
   $('join').addEventListener('click', () => joinArena($('code').value));
   $('code').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); joinArena($('code').value); } });

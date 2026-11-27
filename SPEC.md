@@ -223,6 +223,15 @@ Clone 2D, kawaii, di BZFlag. Pagina HTML singola pubblicata come artifact Claude
 - Limiti dichiarati: niente server, quindi nessuna verifica (un soprannome si può imitare); va bene tra amici. Il `db`
   dell'artifact non è usato: chi apre il link pubblico da fuori organizzazione non potrebbe scriverci.
 
+## v15 — Editor di arene (fase 4c)
+- Dalla schermata iniziale: vista dall'alto dell'arena corrente su griglia da 10, si trascina per disegnare un blocco (muro
+  viola, blocco rosa, piattaforma gialla), Gomma per toglierlo, simmetria sinistra-destra (di base sì), Annulla, Svuota.
+  Le basi della bandiera sono segnate a tratteggio.
+- Codice: `kw1.<taglia>.` + blocchi `x,y,w,h,stile` in decine di pixel, base 36, separati da `;` (max ~120 blocchi).
+  Si copia e si incolla ("Usa codice"); "Gioca questa arena" lo carica per tutta l'arena.
+- In rete il codice viaggia nella tupla dell'arena (`cm` in presence, validato con un'espressione regolare); teletrasporti
+  e bandierine si generano dai blocchi con il seme ricavato dal codice. "Nuova mappa" o un cambio di taglia tornano al generatore.
+
 ## Prossime iterazioni (candidati)
 - Power-up (scudo, tiro rapido, rimbalzo, invisibilità), squadre e cattura della bandiera,
   stanze multiple (`room.join`), classifica persistente (`db`), suoni.
